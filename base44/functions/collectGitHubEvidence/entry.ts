@@ -65,6 +65,12 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
+
+    if (body.debug) {
+      const pat = Deno.env.get('GITHUB_PAT') ?? '';
+      return Response.json({ pat_prefix: pat.slice(0, 6), pat_length: pat.length });
+    }
+
     const { username } = body;
     if (!username) return Response.json({ error: 'username is required' }, { status: 400 });
 
