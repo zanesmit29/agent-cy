@@ -64,6 +64,9 @@ async function collectGitHubEvidence(username, base44) {
   if (!profileRes.ok) return { created: false, reason: 'profile_error' };
   const profile = await profileRes.json();
 
+  // METHOD 3: followers cap — skip anyone too prominent
+  if ((profile.followers ?? 0) > 500) return { created: false, reason: 'too_prominent' };
+
   const contactPath = extractContactPath(profile);
   if (!contactPath) return { created: false, reason: 'no_contact' };
 
@@ -113,35 +116,60 @@ async function collectGitHubEvidence(username, base44) {
   return { created: true, candidate_id: candidate.id, contact_path: contactPath, evidence_card: evidenceCard };
 }
 
-const SEARCH_QUERIES = [
-  'language:Python followers:>50',
-  'language:TypeScript topic:llm',
-  'topic:transformers',
-  'topic:langchain',
-  'topic:weaviate',
-  'topic:rag',
-];
+// METHOD 1: Repo contributors — recently-active, low-star repos
+const REPO_TOPICS = ['rag', 'langchain', 'weaviate', 'llm', 'transformers', 'vector-database'];
 
-async function searchUsernames(query) {
-  const usernames = [];
-  let page = 1;
-  while (usernames.length < 30) {
-    const encoded = encodeURIComponent(query);
-    const res = await ghFetch(`/search/users?q=${encoded}&per_page=30&page=${page}`);
-    if (!res.ok) break;
+async function discoverViaRepoContributors() {
+  const usernames = new Set();
+  const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  for (const topic of REPO_TOPICS) {
+    const q = encodeURIComponent(`topic:${topic} pushed:>${since} stars:<200`);
+    const res = await ghFetch(`/search/repositories?q=${q}&sort=updated&per_page=10`);
+    if (!res.ok) continue;
     const data = await res.json();
-    const items = data.items ?? [];
-    if (items.length === 0) break;
-    for (const item of items) {
-      if (item.login && !usernames.includes(item.login)) {
-        usernames.push(item.login);
-        if (usernames.length >= 30) break;
+    const repos = data.items ?? [];
+
+    for (const repo of repos) {
+      if (repo.owner?.type === 'Organization') continue;
+      const contribRes = await ghFetch(`/repos/${repo.full_name}/contributors?per_page=20`);
+      if (!contribRes.ok) continue;
+      const contributors = await contribRes.json();
+      for (const c of contributors) {
+        if (c.type !== 'User' || c.login.includes('[bot]')) continue;
+        usernames.add(c.login);
       }
     }
-    if (items.length < 30) break;
-    page++;
   }
-  return usernames;
+  return [...usernames];
+}
+
+// METHOD 2: Recent commit authors — AI/ML keywords, last 60 days
+const COMMIT_KEYWORDS = ['langchain', 'weaviate', 'RAG retrieval', 'vector embeddings', 'llm pipeline'];
+
+async function discoverViaRecentCommits() {
+  const usernames = new Set();
+  const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  for (const keyword of COMMIT_KEYWORDS) {
+    const q = encodeURIComponent(`"${keyword}" author-date:>${since}`);
+    const res = await fetch(`${GITHUB_API}/search/commits?q=${q}&per_page=30`, {
+      headers: {
+        Authorization: `Bearer ${GITHUB_PAT}`,
+        Accept: 'application/vnd.github.cloak-preview+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'agentcy-app/1.0',
+      },
+    });
+    if (!res.ok) continue;
+    const data = await res.json();
+    const items = data.items ?? [];
+    for (const item of items) {
+      const login = item.author?.login;
+      if (login && !login.includes('[bot]')) usernames.add(login);
+    }
+  }
+  return [...usernames];
 }
 
 Deno.serve(async (req) => {
@@ -150,23 +178,25 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const allUsernames = new Set();
-    for (const query of SEARCH_QUERIES) {
-      const found = await searchUsernames(query);
-      for (const u of found) allUsernames.add(u);
-    }
+    const [repoContributors, commitAuthors] = await Promise.all([
+      discoverViaRepoContributors(),
+      discoverViaRecentCommits(),
+    ]);
+
+    const allUsernames = new Set([...repoContributors, ...commitAuthors]);
 
     const existingRecords = await base44.asServiceRole.entities.Candidate.list();
     const existingUrls = new Set((existingRecords ?? []).map((c) => c.github_url).filter(Boolean));
     const newUsernames = [...allUsernames].filter((u) => !existingUrls.has(`https://github.com/${u}`));
 
-    let newCandidatesFound = 0, skippedNoContact = 0, skippedDuplicate = 0, skippedError = 0;
+    let newCandidatesFound = 0, skippedNoContact = 0, skippedTooProminent = 0, skippedDuplicate = 0, skippedError = 0;
 
     for (const username of newUsernames) {
       try {
         const result = await collectGitHubEvidence(username, base44);
         if (result.created) newCandidatesFound++;
         else if (result.reason === 'no_contact') skippedNoContact++;
+        else if (result.reason === 'too_prominent') skippedTooProminent++;
         else if (result.reason === 'duplicate') skippedDuplicate++;
         else skippedError++;
       } catch (_) { skippedError++; }
@@ -174,11 +204,12 @@ Deno.serve(async (req) => {
 
     const summary = {
       run_at: new Date().toISOString(),
-      queries_run: SEARCH_QUERIES.length,
+      sources: { repo_contributors: repoContributors.length, commit_authors: commitAuthors.length },
       unique_usernames_found: allUsernames.size,
       already_in_system: existingUrls.size,
       new_usernames_to_process: newUsernames.length,
       new_candidates_found: newCandidatesFound,
+      skipped_too_prominent: skippedTooProminent,
       skipped_no_contact: skippedNoContact,
       skipped_duplicate: skippedDuplicate,
       skipped_error: skippedError,
