@@ -9,6 +9,7 @@ const ghFetch = (path) =>
       Authorization: `Bearer ${GITHUB_PAT}`,
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'agentcy-app/1.0',
     },
   });
 
@@ -78,6 +79,7 @@ Deno.serve(async (req) => {
           Authorization: `Bearer ${pat}`,
           Accept: 'application/vnd.github+json',
           'X-GitHub-Api-Version': '2022-11-28',
+          'User-Agent': 'agentcy-app/1.0',
         },
       });
       const text = await r.text();
