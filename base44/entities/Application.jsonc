@@ -1,0 +1,32 @@
+{
+  "name": "Application",
+  "type": "object",
+  "properties": {
+    "candidate_id": {
+      "type": "string",
+      "description": "Reference to Candidate"
+    },
+    "job_id": {
+      "type": "string",
+      "description": "Reference to Job"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "In review",
+        "Outreach approved",
+        "Intake done",
+        "Advanced",
+        "Rejected",
+        "Interview scheduled",
+        "Hired"
+      ],
+      "default": "In review",
+      "description": "Current application status"
+    }
+  },
+  "required": [
+    "candidate_id",
+    "job_id"
+  ]
+}

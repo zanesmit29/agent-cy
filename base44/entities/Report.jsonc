@@ -1,0 +1,15 @@
+{
+  "name": "Report",
+  "type": "object",
+  "properties": {
+    "candidate_id": {
+      "type": "string",
+      "description": "Reference to Candidate"
+    },
+    "application_id": {
+      "type": "string",
+      "description": "Reference to Application"
+    }
+  },
+  "required": []
+}

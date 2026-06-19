@@ -1,0 +1,23 @@
+{
+  "name": "Job",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Job title"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Open",
+        "Closed",
+        "Paused"
+      ],
+      "default": "Open",
+      "description": "Current status of the job"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

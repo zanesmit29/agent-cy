@@ -65,6 +65,7 @@ module.exports = {
   			heading: ['var(--font-heading)'],
   			body: ['var(--font-body)'],
   			display: ['var(--font-display)'],
+  			sans: ['var(--font-sans)'],
   			mono: ['var(--font-mono)']
   		},
   		keyframes: {

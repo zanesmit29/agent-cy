@@ -1,0 +1,17 @@
+{
+  "name": "Company",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Company name"
+    },
+    "contact_email": {
+      "type": "string",
+      "description": "Primary contact email"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

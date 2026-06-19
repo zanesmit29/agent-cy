@@ -1,0 +1,32 @@
+{
+  "name": "Candidate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Candidate full name"
+    },
+    "email": {
+      "type": "string",
+      "description": "Candidate email address"
+    },
+    "current_stage": {
+      "type": "string",
+      "enum": [
+        "Discovered",
+        "Pending Review",
+        "Outreach Approved",
+        "Intake Done",
+        "Match Packet Ready",
+        "Interview Scheduled",
+        "Opted Out"
+      ],
+      "default": "Discovered",
+      "description": "Current stage in the recruitment pipeline"
+    }
+  },
+  "required": [
+    "name",
+    "email"
+  ]
+}
