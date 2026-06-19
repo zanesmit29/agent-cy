@@ -9,7 +9,7 @@ import ScrollToTop from './components/ScrollToTop';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Navigate } from 'react-router-dom';
 // Add page imports here
-import Landing from './pages/Landing';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 
@@ -39,7 +39,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/dashboard" element={<Dashboard />} />
