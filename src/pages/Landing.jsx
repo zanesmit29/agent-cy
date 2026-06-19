@@ -48,9 +48,19 @@ export default function Landing() {
       </main>
 
       {/* Footer */}
-      <footer className="px-8 py-6 flex items-center justify-between border-t border-[#dbd4cc]">
-        <span className="font-sans text-xs text-[#7d929e]">Built for EU AI Act compliance.</span>
-        <span className="font-sans text-xs text-[#7d929e]">© 2026 Agent(cy)</span>
+      <footer className="px-8 py-6 border-t border-[#dbd4cc] flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p className="font-sans text-xs text-[#7d929e] text-center sm:text-left max-w-xl leading-relaxed">
+          Agent(cy) uses AI to discover candidates and prepare evidence. All hiring decisions are made by human recruiters. Data controller: Agent(cy) —{" "}
+          <a href="mailto:privacy@agentcy.io" className="underline hover:text-[#0f3b59] transition-colors">
+            privacy@agentcy.io
+          </a>
+        </p>
+        <a
+          href="mailto:privacy@agentcy.io"
+          className="font-sans text-xs text-[#7d929e] underline hover:text-[#0f3b59] transition-colors whitespace-nowrap"
+        >
+          Remove my data
+        </a>
       </footer>
     </div>
   );
