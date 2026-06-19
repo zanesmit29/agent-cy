@@ -31,7 +31,7 @@ export default function Home() {
 
         <div className="flex flex-col items-center gap-4">
           <button
-            className="group inline-flex items-center gap-3 bg-white text-[#0a0e13] font-sans text-sm font-medium px-8 py-4 hover:bg-white/90 transition-colors tracking-wide"
+            className="group inline-flex items-center gap-3 bg-white text-[#0a0e13] font-sans text-sm font-medium px-8 py-4 hover:bg-white/90 transition-colors tracking-wide rounded-full"
             style={{ letterSpacing: "0.04em" }}
           >
             Talk to our AI recruiter
