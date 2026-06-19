@@ -71,6 +71,21 @@ Deno.serve(async (req) => {
       return Response.json({ pat_prefix: pat.slice(0, 6), pat_length: pat.length });
     }
 
+    if (body.debug_api) {
+      const pat = Deno.env.get('GITHUB_PAT') ?? '';
+      const r = await fetch('https://api.github.com/users/torvalds', {
+        headers: {
+          Authorization: `Bearer ${pat}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      });
+      const text = await r.text();
+      const hdrs = {};
+      r.headers.forEach((v, k) => { hdrs[k] = v; });
+      return Response.json({ status: r.status, headers: hdrs, body: text.slice(0, 500) });
+    }
+
     const { username } = body;
     if (!username) return Response.json({ error: 'username is required' }, { status: 400 });
 
