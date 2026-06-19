@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
       return Response.json({ candidate_created: false, reason: 'No contact path found on this profile. Candidate not added.', username });
     }
 
-    const existing = await base44.asServiceRole.entities.Candidates.filter({ github_url: `https://github.com/${username}` });
+    const existing = await base44.asServiceRole.entities.Candidate.filter({ github_url: `https://github.com/${username}` });
     if (existing && existing.length > 0) {
       return Response.json({ candidate_created: false, reason: `Candidate already exists: ${username}`, candidate_id: existing[0].id, username });
     }
@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
 
     const gdprDeletionDue = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    const candidate = await base44.asServiceRole.entities.Candidates.create({
+    const candidate = await base44.asServiceRole.entities.Candidate.create({
       name: profile.name ?? profile.login,
       github_url: `https://github.com/${username}`,
       current_stage: 'Discovered',
