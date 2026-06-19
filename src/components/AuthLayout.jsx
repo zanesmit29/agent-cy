@@ -5,7 +5,7 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
     <div className="min-h-screen flex items-center justify-center bg-[#0a0e13] px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <span className="font-heading text-white text-2xl tracking-tight block mb-6">Agent(cy)</span>
+          <span className="font-heading text-2xl tracking-tight block mb-6"><span className="text-white">Agent</span><span className="text-[#dba12c]">(cy)</span></span>
           <h1 className="font-heading text-white text-3xl font-medium">{title}</h1>
           {subtitle && <p className="font-sans text-white/40 mt-2 text-sm">{subtitle}</p>}
         </div>
