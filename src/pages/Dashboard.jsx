@@ -9,11 +9,11 @@ const STAGES = [
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-[#faf9f7] flex flex-col">
+    <div className="min-h-screen bg-[#0a0e13] flex flex-col text-white">
       {/* Top bar */}
-      <header className="px-8 py-5 flex items-center justify-between border-b border-[#dbd4cc] bg-white">
-        <span className="font-heading text-[#0f3b59] text-xl tracking-tight">Agent(cy)</span>
-        <span className="font-sans text-xs text-[#7d929e] tracking-wide uppercase">Recruiter Dashboard</span>
+      <header className="px-8 py-5 flex items-center justify-between border-b border-white/10">
+        <span className="font-heading text-white text-xl tracking-tight">Agent(cy)</span>
+        <span className="font-sans text-xs text-white/40 tracking-wide uppercase">Recruiter Dashboard</span>
       </header>
 
       {/* Kanban */}
@@ -33,15 +33,15 @@ function KanbanColumn({ title }) {
     <div className="w-64 flex flex-col">
       {/* Column header */}
       <div className="mb-3 px-1">
-        <h3 className="font-sans text-xs font-medium tracking-[0.12em] uppercase text-[#0f3b59]">
+        <h3 className="font-sans text-xs font-medium tracking-[0.12em] uppercase text-white/50">
           {title}
         </h3>
-        <div className="mt-2 h-px bg-[#dbd4cc]" />
+        <div className="mt-2 h-px bg-white/10" />
       </div>
 
       {/* Empty column body */}
-      <div className="flex-1 min-h-[520px] rounded-sm bg-white border border-[#dbd4cc] flex items-center justify-center">
-        <p className="font-sans text-xs text-[#dbd4cc]">No candidates</p>
+      <div className="flex-1 min-h-[520px] rounded-sm bg-white/5 border border-white/10 flex items-center justify-center">
+        <p className="font-sans text-xs text-white/20">No candidates</p>
       </div>
     </div>
   );
