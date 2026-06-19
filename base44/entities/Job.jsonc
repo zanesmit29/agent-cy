@@ -15,6 +15,21 @@
       ],
       "default": "Open",
       "description": "Current status of the job"
+    },
+    "required_stack": {
+      "type": "string",
+      "description": "Required tech stack, e.g. Python, TypeScript, Rust"
+    },
+    "role_type": {
+      "type": "string",
+      "enum": [
+        "AI/ML",
+        "Frontend",
+        "Backend",
+        "Fullstack",
+        "Other"
+      ],
+      "description": "Type of engineering role"
     }
   },
   "required": [

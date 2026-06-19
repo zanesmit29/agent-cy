@@ -23,6 +23,47 @@
       ],
       "default": "Discovered",
       "description": "Current stage in the recruitment pipeline"
+    },
+    "github_url": {
+      "type": "string",
+      "description": "GitHub profile URL"
+    },
+    "huggingface_url": {
+      "type": "string",
+      "description": "HuggingFace profile URL"
+    },
+    "discovered_via": {
+      "type": "string",
+      "enum": [
+        "GitHub",
+        "HuggingFace",
+        "Discord",
+        "LinkedIn"
+      ],
+      "description": "Source channel where candidate was discovered"
+    },
+    "evidence_card": {
+      "type": "string",
+      "description": "Raw JSON facts about the candidate. No numerical score. No aggregation."
+    },
+    "contact_path": {
+      "type": "string",
+      "description": "Specific URL or handle that makes the candidate reachable"
+    },
+    "opted_out": {
+      "type": "boolean",
+      "default": false,
+      "description": "GDPR Art. 17 \u2014 candidate has requested erasure or opted out"
+    },
+    "opted_out_date": {
+      "type": "string",
+      "format": "date",
+      "description": "GDPR Art. 17 \u2014 date the candidate opted out"
+    },
+    "gdpr_deletion_due": {
+      "type": "string",
+      "format": "date",
+      "description": "GDPR Art. 5(1)(e) \u2014 auto-set to today +90 days at creation, today +30 days on opt-out"
     }
   },
   "required": [
