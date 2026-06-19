@@ -31,7 +31,7 @@ async function countRecentCommits(username, repos) {
   const topRepos = repos
     .filter((r) => !r.fork)
     .sort((a, b) => new Date(b.pushed_at).getTime() - new Date(a.pushed_at).getTime())
-    .slice(0, 10);
+    .slice(0, 5);
   for (const repo of topRepos) {
     try {
       const res = await ghFetch(`/repos/${username}/${repo.name}/commits?author=${username}&since=${since}&per_page=100`);
@@ -64,7 +64,6 @@ async function collectGitHubEvidence(username, base44) {
   if (!profileRes.ok) return { created: false, reason: 'profile_error' };
   const profile = await profileRes.json();
 
-  // METHOD 3: followers cap — skip anyone too prominent
   if ((profile.followers ?? 0) > 500) return { created: false, reason: 'too_prominent' };
 
   const contactPath = extractContactPath(profile);
@@ -116,23 +115,21 @@ async function collectGitHubEvidence(username, base44) {
   return { created: true, candidate_id: candidate.id, contact_path: contactPath, evidence_card: evidenceCard };
 }
 
-// METHOD 1: Repo contributors — recently-active, low-star repos
-const REPO_TOPICS = ['rag', 'langchain', 'weaviate', 'llm', 'transformers', 'vector-database'];
+const ALL_REPO_TOPICS = ['rag', 'langchain', 'weaviate', 'llm', 'transformers', 'vector-database'];
+const ALL_COMMIT_KEYWORDS = ['langchain', 'weaviate', 'RAG retrieval', 'vector embeddings', 'llm pipeline'];
 
-async function discoverViaRepoContributors() {
+async function discoverViaRepoContributors(topicSlice) {
   const usernames = new Set();
   const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-  for (const topic of REPO_TOPICS) {
+  for (const topic of topicSlice) {
     const q = encodeURIComponent(`topic:${topic} pushed:>${since} stars:<200`);
-    const res = await ghFetch(`/search/repositories?q=${q}&sort=updated&per_page=10`);
+    const res = await ghFetch(`/search/repositories?q=${q}&sort=updated&per_page=3`);
     if (!res.ok) continue;
     const data = await res.json();
     const repos = data.items ?? [];
-
     for (const repo of repos) {
       if (repo.owner?.type === 'Organization') continue;
-      const contribRes = await ghFetch(`/repos/${repo.full_name}/contributors?per_page=20`);
+      const contribRes = await ghFetch(`/repos/${repo.full_name}/contributors?per_page=10`);
       if (!contribRes.ok) continue;
       const contributors = await contribRes.json();
       for (const c of contributors) {
@@ -144,16 +141,12 @@ async function discoverViaRepoContributors() {
   return [...usernames];
 }
 
-// METHOD 2: Recent commit authors — AI/ML keywords, last 60 days
-const COMMIT_KEYWORDS = ['langchain', 'weaviate', 'RAG retrieval', 'vector embeddings', 'llm pipeline'];
-
-async function discoverViaRecentCommits() {
+async function discoverViaRecentCommits(keywordSlice) {
   const usernames = new Set();
   const since = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-  for (const keyword of COMMIT_KEYWORDS) {
+  for (const keyword of keywordSlice) {
     const q = encodeURIComponent(`"${keyword}" author-date:>${since}`);
-    const res = await fetch(`${GITHUB_API}/search/commits?q=${q}&per_page=30`, {
+    const res = await fetch(`${GITHUB_API}/search/commits?q=${q}&per_page=15`, {
       headers: {
         Authorization: `Bearer ${GITHUB_PAT}`,
         Accept: 'application/vnd.github.cloak-preview+json',
@@ -178,9 +171,24 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
+    const hourSlot = Math.floor(new Date().getUTCHours() / 6);
+    const topicOffset = (hourSlot * 3) % ALL_REPO_TOPICS.length;
+    const keywordOffset = (hourSlot * 3) % ALL_COMMIT_KEYWORDS.length;
+
+    const topicSlice = [
+      ALL_REPO_TOPICS[topicOffset % ALL_REPO_TOPICS.length],
+      ALL_REPO_TOPICS[(topicOffset + 1) % ALL_REPO_TOPICS.length],
+      ALL_REPO_TOPICS[(topicOffset + 2) % ALL_REPO_TOPICS.length],
+    ];
+    const keywordSlice = [
+      ALL_COMMIT_KEYWORDS[keywordOffset % ALL_COMMIT_KEYWORDS.length],
+      ALL_COMMIT_KEYWORDS[(keywordOffset + 1) % ALL_COMMIT_KEYWORDS.length],
+      ALL_COMMIT_KEYWORDS[(keywordOffset + 2) % ALL_COMMIT_KEYWORDS.length],
+    ];
+
     const [repoContributors, commitAuthors] = await Promise.all([
-      discoverViaRepoContributors(),
-      discoverViaRecentCommits(),
+      discoverViaRepoContributors(topicSlice),
+      discoverViaRecentCommits(keywordSlice),
     ]);
 
     const allUsernames = new Set([...repoContributors, ...commitAuthors]);
@@ -204,6 +212,9 @@ Deno.serve(async (req) => {
 
     const summary = {
       run_at: new Date().toISOString(),
+      hour_slot: hourSlot,
+      topics_this_run: topicSlice,
+      keywords_this_run: keywordSlice,
       sources: { repo_contributors: repoContributors.length, commit_authors: commitAuthors.length },
       unique_usernames_found: allUsernames.size,
       already_in_system: existingUrls.size,
