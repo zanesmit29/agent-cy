@@ -32,80 +32,151 @@ function extractGitHubContactPath(profile) {
   if (profile.blog?.trim()) return `website:${profile.blog.trim()}`;
   if (profile.twitter_username) return `twitter:${profile.twitter_username}`;
   const bio = profile.bio ?? '';
-  const linkedinMatch = bio.match(/linkedin\.com\/in\/[\w-]+/i);
-  if (linkedinMatch) return `linkedin:https://${linkedinMatch[0]}`;
-  const discordMatch = bio.match(/discord[:\s#]+[\w#]{2,37}/i);
-  if (discordMatch) return `discord:${discordMatch[0]}`;
+  const lm = bio.match(/linkedin\.com\/in\/[\w-]+/i);
+  if (lm) return `linkedin:https://${lm[0]}`;
+  const dm = bio.match(/discord[:\s#]+[\w#]{2,37}/i);
+  if (dm) return `discord:${dm[0]}`;
   return null;
 }
 
-function extractGitHubHandle(hfProfile) {
-  const candidates = [
-    hfProfile.github ?? '',
-    ...(Array.isArray(hfProfile.socialLinks) ? hfProfile.socialLinks : []),
-    hfProfile.website ?? '',
-    hfProfile.description ?? '',
-    hfProfile.bio ?? '',
-  ];
-  for (const s of candidates) {
-    const m = String(s).match(/github\.com\/([A-Za-z0-9_-]+)/i);
-    if (m?.[1] && m[1] !== 'apps') return m[1];
+async function scrapeHFContactLinks(username) {
+  try {
+    const res = await fetch(`https://huggingface.co/${username}`, {
+      headers: { 'User-Agent': 'agentcy-app/1.0' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return { github_handle: null, contact_path: null };
+    const html = await res.text();
+
+    let githubHandle = null;
+    for (const m of html.matchAll(/https?:\/\/github\.com\/([A-Za-z0-9_-]+)/g)) {
+      const h = m[1];
+      if (h && !['huggingface', 'apps', 'features', 'pricing'].includes(h) && h.length > 1) {
+        githubHandle = h;
+        break;
+      }
+    }
+
+    let twitterHandle = null;
+    const twM = html.match(/https?:\/\/(?:twitter|x)\.com\/([A-Za-z0-9_]{1,30})/);
+    if (twM?.[1] && !['huggingface', 'intent', 'share', 'home', 'i'].includes(twM[1])) {
+      twitterHandle = twM[1];
+    }
+
+    let linkedinUrl = null;
+    const liM = html.match(/https?:\/\/(?:www\.)?linkedin\.com\/in\/([\w-]+)/);
+    if (liM) linkedinUrl = `https://linkedin.com/in/${liM[1]}`;
+
+    let contactPath = null;
+    if (githubHandle) contactPath = `github:https://github.com/${githubHandle}`;
+    else if (twitterHandle) contactPath = `twitter:https://twitter.com/${twitterHandle}`;
+    else if (linkedinUrl) contactPath = `linkedin:${linkedinUrl}`;
+
+    return { github_handle: githubHandle, contact_path: contactPath };
+  } catch (_) {
+    return { github_handle: null, contact_path: null };
   }
-  return null;
 }
 
-async function collectHuggingFaceEvidence(username) {
-  const NULL_RESULT = { is_org: false, contact_path: null, hf_evidence: {}, github_handle: null };
+async function processUsername(username, existingGitHubUrls, existingHFUrls, base44) {
+  if (isKnownOrg(username)) return { created: false, reason: 'org' };
+  if (existingHFUrls.has(`https://huggingface.co/${username}`)) return { created: false, reason: 'duplicate' };
 
-  const profileRes = await fetch(`${HF_API}/users/${username}`, {
+  // KEY FIX: use /overview endpoint — this correctly returns type, numModels, numSpaces
+  const overviewRes = await fetch(`${HF_API}/users/${username}/overview`, {
     headers: { 'User-Agent': 'agentcy-app/1.0' },
+    signal: AbortSignal.timeout(6000),
   });
-  if (!profileRes.ok) return { ...NULL_RESULT, is_org: true };
+  if (!overviewRes.ok) return { created: false, reason: 'fetch_failed' };
+  const overview = await overviewRes.json();
+  if (overview.error || overview.type === 'org') return { created: false, reason: 'org' };
 
-  const hfProfile = await profileRes.json();
-  if (hfProfile.type === 'org') return { ...NULL_RESULT, is_org: true };
+  const modelCount = overview.numModels ?? 0;
+  const spacesCount = overview.numSpaces ?? 0;
+  if (modelCount === 0 && spacesCount === 0) return { created: false, reason: 'no_activity' };
 
-  let contactPath = null;
-  if (hfProfile.email) contactPath = `email:${hfProfile.email}`;
-  else if (hfProfile.website?.trim()) contactPath = `website:${hfProfile.website.trim()}`;
-  else if (hfProfile.twitter) contactPath = `twitter:${hfProfile.twitter}`;
-  else {
-    const bioText = String(hfProfile.description ?? hfProfile.bio ?? '');
-    const lm = bioText.match(/linkedin\.com\/in\/[\w-]+/i);
-    if (lm) contactPath = `linkedin:https://${lm[0]}`;
+  const { github_handle: scrapedGH, contact_path: scrapedContact } = await scrapeHFContactLinks(username);
+
+  let finalContactPath = scrapedContact;
+  let githubHandle = scrapedGH;
+  let githubEvidence = null;
+
+  if (githubHandle) {
+    if (existingGitHubUrls.has(`https://github.com/${githubHandle}`)) return { created: false, reason: 'duplicate_github' };
+    const ghRes = await ghFetch(`/users/${githubHandle}`);
+    if (ghRes.ok) {
+      const ghProfile = await ghRes.json();
+      const ghContact = extractGitHubContactPath(ghProfile);
+      if (ghContact && (!finalContactPath || finalContactPath.startsWith('github:'))) finalContactPath = ghContact;
+      if ((ghProfile.followers ?? 0) <= 2000) {
+        const reposRes = await ghFetch(`/users/${githubHandle}/repos?per_page=50&sort=pushed`);
+        const repos = reposRes.ok ? await reposRes.json() : [];
+        const ownRepos = Array.isArray(repos) ? repos.filter((r) => !r.fork) : [];
+        const totalStars = ownRepos.reduce((s, r) => s + (r.stargazers_count ?? 0), 0);
+        const langMap = {};
+        for (const r of ownRepos) { if (r.language) langMap[r.language] = (langMap[r.language] ?? 0) + 1; }
+        const languages = Object.entries(langMap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([l]) => l);
+        githubEvidence = { stars: `${totalStars} stars across ${ownRepos.length} repos`, languages, public_repos: ghProfile.public_repos, followers: ghProfile.followers };
+      }
+    }
   }
 
-  const githubHandle = extractGitHubHandle(hfProfile);
+  if (!finalContactPath && !githubHandle && !existingGitHubUrls.has(`https://github.com/${username}`)) {
+    const ghRes = await ghFetch(`/users/${username}`);
+    if (ghRes.ok) {
+      const ghProfile = await ghRes.json();
+      if (ghProfile.type !== 'Organization') {
+        githubHandle = username;
+        finalContactPath = extractGitHubContactPath(ghProfile);
+        if (finalContactPath && (ghProfile.followers ?? 0) <= 2000) {
+          const reposRes = await ghFetch(`/users/${username}/repos?per_page=50&sort=pushed`);
+          const repos = reposRes.ok ? await reposRes.json() : [];
+          const ownRepos = Array.isArray(repos) ? repos.filter((r) => !r.fork) : [];
+          const totalStars = ownRepos.reduce((s, r) => s + (r.stargazers_count ?? 0), 0);
+          const langMap = {};
+          for (const r of ownRepos) { if (r.language) langMap[r.language] = (langMap[r.language] ?? 0) + 1; }
+          const languages = Object.entries(langMap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([l]) => l);
+          githubEvidence = { stars: `${totalStars} stars across ${ownRepos.length} repos`, languages, public_repos: ghProfile.public_repos, followers: ghProfile.followers };
+        }
+      }
+    }
+  }
 
-  const modelsRes = await fetch(`${HF_API}/models?author=${username}&limit=100`, {
-    headers: { 'User-Agent': 'agentcy-app/1.0' },
-  });
-  const modelList = modelsRes.ok ? (await modelsRes.json()) : [];
+  if (!finalContactPath) return { created: false, reason: 'no_contact' };
+
+  const modelsRes = await fetch(`${HF_API}/models?author=${username}&limit=10`, { headers: { 'User-Agent': 'agentcy-app/1.0' } });
+  const modelList = modelsRes.ok ? await modelsRes.json() : [];
   const safeModels = Array.isArray(modelList) ? modelList : [];
-
-  const modelCount = safeModels.length;
   const totalDownloads = safeModels.reduce((s, m) => s + (m.downloads ?? 0), 0);
   const modelNames = safeModels.slice(0, 5).map((m) => m.modelId ?? m.id ?? '').filter(Boolean);
-  const lastPush = safeModels
-    .map((m) => m.lastModified ?? m.updatedAt ?? '')
-    .filter(Boolean).sort().reverse()[0] ?? null;
+  const lastPush = safeModels.map((m) => m.lastModified ?? m.updatedAt ?? '').filter(Boolean).sort().reverse()[0] ?? null;
 
-  const spacesRes = await fetch(`${HF_API}/spaces?author=${username}&limit=100`, {
-    headers: { 'User-Agent': 'agentcy-app/1.0' },
-  });
-  const spaceList = spacesRes.ok ? (await spacesRes.json()) : [];
-  const spacesCount = Array.isArray(spaceList) ? spaceList.length : 0;
-
-  const hfEvidence = {
-    huggingface_models: modelCount > 0
-      ? `${modelCount} model${modelCount !== 1 ? 's' : ''}, ${totalDownloads.toLocaleString()} downloads`
-      : '0 models',
+  const evidenceCard = {
+    huggingface_models: modelCount > 0 ? `${modelCount} model${modelCount !== 1 ? 's' : ''}, ${totalDownloads.toLocaleString()} downloads` : '0 models',
     model_names: modelNames,
     spaces_count: spacesCount,
     last_push: lastPush,
+    ...(githubEvidence ?? {}),
+    commits_90d: null,
+    oss_contributions: [],
   };
 
-  return { is_org: false, contact_path: contactPath, hf_evidence: hfEvidence, github_handle: githubHandle };
+  const gdprDeletionDue = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  await base44.asServiceRole.entities.Candidate.create({
+    name: overview.fullname || username,
+    email: `${username}@huggingface-noemail.placeholder`,
+    github_url: githubHandle ? `https://github.com/${githubHandle}` : null,
+    huggingface_url: `https://huggingface.co/${username}`,
+    current_stage: 'Discovered',
+    discovered_via: 'HuggingFace',
+    contact_path: finalContactPath,
+    evidence_card: JSON.stringify(evidenceCard, null, 2),
+    opted_out: false,
+    gdpr_deletion_due: gdprDeletionDue,
+  });
+
+  return { created: true, reason: 'ok' };
 }
 
 const RECENT_KEYWORDS = ['llm', 'rag', 'fine-tuning', 'langchain', 'weaviate', 'embedding', 'agent'];
@@ -115,8 +186,7 @@ async function searchByRecent() {
   const usernames = new Set();
   for (const keyword of RECENT_KEYWORDS) {
     try {
-      const url = `${HF_API}/models?search=${encodeURIComponent(keyword)}&sort=lastModified&direction=-1&limit=50`;
-      const res = await fetch(url, { headers: { 'User-Agent': 'agentcy-app/1.0' } });
+      const res = await fetch(`${HF_API}/models?search=${encodeURIComponent(keyword)}&sort=lastModified&direction=-1&limit=50`, { headers: { 'User-Agent': 'agentcy-app/1.0' } });
       if (!res.ok) continue;
       const models = await res.json();
       if (!Array.isArray(models)) continue;
@@ -133,8 +203,7 @@ async function searchByRelevance() {
   const usernames = new Set();
   for (const keyword of INDIVIDUAL_KEYWORDS) {
     try {
-      const url = `${HF_API}/models?search=${encodeURIComponent(keyword)}&limit=50`;
-      const res = await fetch(url, { headers: { 'User-Agent': 'agentcy-app/1.0' } });
+      const res = await fetch(`${HF_API}/models?search=${encodeURIComponent(keyword)}&limit=50`, { headers: { 'User-Agent': 'agentcy-app/1.0' } });
       if (!res.ok) continue;
       const models = await res.json();
       if (!Array.isArray(models)) continue;
@@ -153,123 +222,44 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const [recentAuthors, relevanceAuthors] = await Promise.all([
-      searchByRecent(),
-      searchByRelevance(),
-    ]);
-
+    const [recentAuthors, relevanceAuthors] = await Promise.all([searchByRecent(), searchByRelevance()]);
     const allUsernames = new Set([...recentAuthors, ...relevanceAuthors]);
 
     const existingRecords = await base44.asServiceRole.entities.Candidate.list();
-    const existingGitHubUrls = new Set(
-      (existingRecords ?? []).map((c) => c.github_url).filter(Boolean)
-    );
-    const existingHFUrls = new Set(
-      (existingRecords ?? []).map((c) => c.huggingface_url).filter(Boolean)
-    );
+    const existingGitHubUrls = new Set((existingRecords ?? []).map((c) => c.github_url).filter(Boolean));
+    const existingHFUrls = new Set((existingRecords ?? []).map((c) => c.huggingface_url).filter(Boolean));
+    const newUsernames = [...allUsernames].filter(u => !existingHFUrls.has(`https://huggingface.co/${u}`));
 
-    const newUsernames = [...allUsernames].filter(
-      (u) => !existingHFUrls.has(`https://huggingface.co/${u}`)
-    );
+    const BATCH_SIZE = 5;
+    const toProcess = newUsernames.slice(0, 60);
+    let newCandidatesFound = 0;
+    const skipped = { org: 0, no_activity: 0, no_contact: 0, duplicate: 0, duplicate_github: 0, fetch_failed: 0, error: 0 };
 
-    let newCandidatesFound = 0, skippedNoContact = 0, skippedOrg = 0,
-        skippedDuplicate = 0, skippedError = 0, githubEnriched = 0;
-
-    for (const username of newUsernames) {
-      try {
-        const { is_org, contact_path, hf_evidence, github_handle } =
-          await collectHuggingFaceEvidence(username);
-
-        if (is_org) { skippedOrg++; continue; }
-
-        let finalContactPath = contact_path;
-        let githubEvidence = null;
-
-        if (github_handle) {
-          const ghUrl = `https://github.com/${github_handle}`;
-          if (existingGitHubUrls.has(ghUrl)) { skippedDuplicate++; continue; }
-
-          const ghProfileRes = await ghFetch(`/users/${github_handle}`);
-          if (ghProfileRes.ok) {
-            const ghProfile = await ghProfileRes.json();
-            if (!finalContactPath) finalContactPath = extractGitHubContactPath(ghProfile);
-
-            if ((ghProfile.followers ?? 0) <= 500) {
-              const reposRes = await ghFetch(`/users/${github_handle}/repos?per_page=50&sort=pushed`);
-              const repos = reposRes.ok ? await reposRes.json() : [];
-              const ownRepos = Array.isArray(repos) ? repos.filter((r) => !r.fork) : [];
-              const totalStars = ownRepos.reduce((s, r) => s + (r.stargazers_count ?? 0), 0);
-              const langMap = {};
-              for (const r of ownRepos) {
-                if (r.language) langMap[r.language] = (langMap[r.language] ?? 0) + 1;
-              }
-              const languages = Object.entries(langMap)
-                .sort((a, b) => b[1] - a[1]).slice(0, 5).map(([l]) => l);
-              githubEvidence = {
-                stars: `${totalStars} stars across ${ownRepos.length} repos`,
-                languages,
-                public_repos: ghProfile.public_repos,
-                followers: ghProfile.followers,
-              };
-              githubEnriched++;
-            }
-          }
+    for (let i = 0; i < toProcess.length; i += BATCH_SIZE) {
+      const batch = toProcess.slice(i, i + BATCH_SIZE);
+      const results = await Promise.allSettled(batch.map(u => processUsername(u, existingGitHubUrls, existingHFUrls, base44)));
+      for (const r of results) {
+        if (r.status === 'fulfilled') {
+          if (r.value.created) newCandidatesFound++;
+          else skipped[r.value.reason] = (skipped[r.value.reason] ?? 0) + 1;
+        } else {
+          skipped.error++;
         }
-
-        if (!finalContactPath) { skippedNoContact++; continue; }
-
-        const hfUrl = `https://huggingface.co/${username}`;
-        const existing = await base44.asServiceRole.entities.Candidate.filter({ huggingface_url: hfUrl });
-        if (existing?.length > 0) { skippedDuplicate++; continue; }
-
-        const evidenceCard = {
-          ...hf_evidence,
-          ...(githubEvidence ?? {}),
-          commits_90d: null,
-          oss_contributions: [],
-          readme_quality: null,
-        };
-
-        const gdprDeletionDue = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
-          .toISOString().split('T')[0];
-
-        await base44.asServiceRole.entities.Candidate.create({
-          name: username,
-          email: `${username}@huggingface-noemail.placeholder`,
-          github_url: github_handle ? `https://github.com/${github_handle}` : null,
-          huggingface_url: hfUrl,
-          current_stage: 'Discovered',
-          discovered_via: 'HuggingFace',
-          contact_path: finalContactPath,
-          evidence_card: JSON.stringify(evidenceCard, null, 2),
-          opted_out: false,
-          gdpr_deletion_due: gdprDeletionDue,
-        });
-
-        newCandidatesFound++;
-      } catch (_) { skippedError++; }
+      }
     }
 
     const summary = {
       run_at: new Date().toISOString(),
-      sources: {
-        recent_keyword_authors: recentAuthors.length,
-        relevance_keyword_authors: relevanceAuthors.length,
-      },
       unique_usernames_found: allUsernames.size,
       already_in_system: existingHFUrls.size,
       new_usernames_to_process: newUsernames.length,
+      processed_this_run: toProcess.length,
       new_candidates_found: newCandidatesFound,
-      github_enriched: githubEnriched,
-      skipped_org: skippedOrg,
-      skipped_no_contact: skippedNoContact,
-      skipped_duplicate: skippedDuplicate,
-      skipped_error: skippedError,
+      skipped,
     };
 
     console.log('[searchHuggingFace] Run complete:', JSON.stringify(summary));
     return Response.json(summary);
-
   } catch (error) {
     console.error('[searchHuggingFace] Fatal error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
