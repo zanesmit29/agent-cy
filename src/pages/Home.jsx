@@ -18,7 +18,7 @@ export default function Home() {
         <span className="font-heading text-xl tracking-tight"><span className="text-white [font-family:'EB_Garamond',_Garamond,_Georgia,_serif] font-normal">Agent</span><span className="text-[#dba12c] [font-family:'EB_Garamond',_Garamond,_Georgia,_serif] font-normal">(cy)</span></span>
         <a
           href="/login"
-          className="font-sans text-sm text-white/40 hover:text-white/80 transition-colors">
+          className="font-sans text-sm text-white/40 hover:text-white/80 transition-colors hidden">
           
           Recruiter login →
         </a>
@@ -59,8 +59,8 @@ export default function Home() {
             <Button
               variant="outline"
               className="w-full h-12 text-sm font-sans font-medium bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white rounded-sm"
-              onClick={handleRecruiterLogin}
-            >
+              onClick={handleRecruiterLogin}>
+              
               <GoogleIcon className="w-5 h-5 mr-2" />
               Continue with Google
             </Button>
@@ -75,8 +75,8 @@ export default function Home() {
             <Button
               variant="outline"
               className="w-full h-12 text-sm font-sans font-medium bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white rounded-sm"
-              onClick={handleCandidateLogin}
-            >
+              onClick={handleCandidateLogin}>
+              
               <GoogleIcon className="w-5 h-5 mr-2" />
               Continue with Google
             </Button>
