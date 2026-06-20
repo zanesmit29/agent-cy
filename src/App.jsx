@@ -13,6 +13,7 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
 import Login from './pages/Login';
+import Talk from './pages/Talk';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -41,6 +42,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/talk" element={<Talk />} />
       <Route path="/login" element={<Login />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/dashboard" element={<Dashboard />} />
