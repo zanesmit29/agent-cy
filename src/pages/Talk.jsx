@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Vapi from "@vapi-ai/web";
 
 const VAPI_PUBLIC_KEY = "753f3541-f459-4c9e-b87e-63b5b9e2d93e";
 const SQUAD_ID = "c767d939-3822-495c-bbaf-f7c880b2d093";
@@ -8,7 +9,7 @@ const STATES = { IDLE: "idle", CONNECTING: "connecting", LIVE: "live", ENDED: "e
 export default function TalkPage() {
   const [state, setState] = useState(STATES.IDLE);
   const [agentSpeaking, setAgentSpeaking] = useState(false);
-  const [vapiReady, setVapiReady] = useState(false);
+  const [vapiReady] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const vapiRef = useRef(null);
   const orbRef = useRef(null);
@@ -17,17 +18,6 @@ export default function TalkPage() {
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const streamRef = useRef(null);
-
-  useEffect(() => {
-    if (window.Vapi) { setVapiReady(true); return; }
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/vapi.js";
-    script.async = true;
-    script.onload = () => setVapiReady(true);
-    script.onerror = () => console.error("Vapi SDK failed to load");
-    document.head.appendChild(script);
-    return () => { try { document.head.removeChild(script); } catch(_){} };
-  }, []);
 
   useEffect(() => {
     let frame;
@@ -93,7 +83,7 @@ export default function TalkPage() {
 
   const initVapi = () => {
     if (vapiRef.current) return;
-    const vapi = new window.Vapi(VAPI_PUBLIC_KEY);
+    const vapi = new Vapi(VAPI_PUBLIC_KEY);
     vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
