@@ -8,7 +8,7 @@
     },
     "email": {
       "type": "string",
-      "description": "Candidate email address"
+      "description": "Candidate email address or placeholder if no real email was found"
     },
     "current_stage": {
       "type": "string",
@@ -48,7 +48,7 @@
     },
     "contact_path": {
       "type": "string",
-      "description": "Specific URL or handle that makes the candidate reachable"
+      "description": "Specific URL or handle that makes the candidate reachable \u2014 source of truth for outreach"
     },
     "opted_out": {
       "type": "boolean",
@@ -67,7 +67,6 @@
     }
   },
   "required": [
-    "name",
-    "email"
+    "name"
   ]
 }
