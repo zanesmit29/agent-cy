@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Vapi from "@vapi-ai/web";
 
 const VAPI_PUBLIC_KEY = "753f3541-f459-4c9e-b87e-63b5b9e2d93e";
 const SQUAD_ID = "c767d939-3822-495c-bbaf-f7c880b2d093";
@@ -8,7 +9,6 @@ const STATES = { IDLE: "idle", CONNECTING: "connecting", LIVE: "live", ENDED: "e
 export default function TalkPage() {
   const [state, setState] = useState(STATES.IDLE);
   const [agentSpeaking, setAgentSpeaking] = useState(false);
-  const [vapiReady, setVapiReady] = useState(false);
   const vapiRef = useRef(null);
   const orbRef = useRef(null);
   const ring1Ref = useRef(null);
@@ -16,17 +16,6 @@ export default function TalkPage() {
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const streamRef = useRef(null);
-
-  useEffect(() => {
-    if (window.Vapi) { setVapiReady(true); return; }
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/vapi.js";
-    script.async = true;
-    script.onload = () => setVapiReady(true);
-    script.onerror = () => console.error("Vapi SDK failed to load");
-    document.head.appendChild(script);
-    return () => { try { document.head.removeChild(script); } catch(_){} };
-  }, []);
 
   useEffect(() => {
     let frame;
@@ -92,7 +81,7 @@ export default function TalkPage() {
 
   const initVapi = () => {
     if (vapiRef.current) return;
-    const vapi = new window.Vapi(VAPI_PUBLIC_KEY);
+    const vapi = new Vapi(VAPI_PUBLIC_KEY);
     vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
@@ -102,7 +91,6 @@ export default function TalkPage() {
   };
 
   const handleStart = () => {
-    if (!vapiReady) return;
     initVapi();
     setState(STATES.CONNECTING);
     vapiRef.current.start({ squadId: SQUAD_ID });
@@ -155,9 +143,9 @@ export default function TalkPage() {
       )}
       {state === STATES.CONNECTING && <div style={{ marginBottom: "48px" }} />}
       {(state === STATES.IDLE || state === STATES.ERROR) && (
-        <button onClick={handleStart} disabled={!vapiReady}
-          style={{ background: "transparent", color: "#f0ebe3", border: `1px solid ${vapiReady ? "#f0ebe3" : dark}`, borderRadius: "100px", padding: "15px 40px", fontSize: "15px", cursor: vapiReady ? "pointer" : "not-allowed", opacity: vapiReady ? 1 : 0.4, fontFamily: "-apple-system, sans-serif", transition: "border-color 0.2s, color 0.2s" }}
-          onMouseEnter={e => { if(vapiReady){ e.currentTarget.style.borderColor = amber; e.currentTarget.style.color = amber; }}}
+        <button onClick={handleStart}
+          style={{ background: "transparent", color: "#f0ebe3", border: "1px solid #f0ebe3", borderRadius: "100px", padding: "15px 40px", fontSize: "15px", cursor: "pointer", fontFamily: "-apple-system, sans-serif", transition: "border-color 0.2s, color 0.2s" }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = amber; e.currentTarget.style.color = amber; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = "#f0ebe3"; e.currentTarget.style.color = "#f0ebe3"; }}>
           Start conversation →
         </button>
