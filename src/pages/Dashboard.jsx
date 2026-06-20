@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import KanbanColumn from "@/components/dashboard/KanbanColumn";
 import CandidateDetailModal from "@/components/dashboard/CandidateDetailModal";
-import DiscoverPanel from "@/components/dashboard/DiscoverPanel";
 import PendingReviewCard from "@/components/dashboard/PendingReviewCard";
 
 const STAGES = [
@@ -124,8 +123,6 @@ export default function Dashboard() {
           {draftResult.message}
         </div>
       )}
-
-      <DiscoverPanel onSuccess={fetchAll} />
 
       {/* Kanban */}
       <main className="flex-1 overflow-x-auto px-8 py-8">
