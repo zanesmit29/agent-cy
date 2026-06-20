@@ -52,9 +52,9 @@ export default function Dashboard() {
       const generated = data.drafts_generated ?? 0;
       const skipped = data.skipped_no_evidence ?? 0;
       const remaining = data.remaining_in_queue ?? 0;
-      let msg = `${generated} draft${generated !== 1 ? "s" : ""} generated`;
-      if (skipped > 0) msg += `, ${skipped} skipped (no evidence)`;
-      if (remaining > 0) msg += ` — ${remaining} remaining in queue. Press again to continue.`;
+      let msg = `✅ ${generated} draft${generated !== 1 ? "s" : ""} generated`;
+      if (skipped > 0) msg += `, ${skipped} skipped`;
+      if (remaining > 0) msg += `, ${remaining} remaining — press again to continue.`;
       else msg += " — queue complete.";
       setDraftResult({ type: remaining > 0 ? "warning" : "success", message: msg });
       fetchAll();

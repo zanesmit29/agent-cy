@@ -6,29 +6,6 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // STEP 0 — selectOutreachChannel internally
-    const discoveredCandidates = await base44.asServiceRole.entities.Candidate.filter({
-      current_stage: 'Discovered',
-    });
-
-    let channelsAssigned = 0;
-    for (const c of discoveredCandidates ?? []) {
-      if (c.opted_out || c.outreach_channel) continue;
-      const contactPath = (c.contact_path ?? '').toLowerCase();
-      let channel = null;
-      if (contactPath.startsWith('email:') || c.email?.trim()) channel = 'Email';
-      else if (contactPath.startsWith('linkedin:') || c.linkedin_url?.trim()) channel = 'LinkedIn';
-      else if (contactPath.startsWith('twitter:') || c.twitter_handle?.trim()) channel = 'Twitter DM';
-      if (channel) {
-        await base44.asServiceRole.entities.Candidate.update(c.id, {
-          outreach_channel: channel,
-          outreach_status: 'Not contacted',
-        });
-        channelsAssigned++;
-      }
-    }
-
-    // STEP 1 — Find eligible candidates, take next BATCH_SIZE
     const allDiscovered = await base44.asServiceRole.entities.Candidate.filter({
       current_stage: 'Discovered',
     });
@@ -46,15 +23,13 @@ Deno.serve(async (req) => {
     if (batch.length === 0) {
       return Response.json({
         success: true,
-        message: 'No eligible candidates to process.',
-        channels_assigned_step0: channelsAssigned,
+        message: 'No eligible candidates — all done or none have a channel assigned.',
         drafts_generated: 0,
         skipped_no_evidence: 0,
         remaining_in_queue: 0,
       });
     }
 
-    // Load open jobs + companies once
     const openJobs = await base44.asServiceRole.entities.Job.filter({ status: 'Open' });
     const allCompanies = await base44.asServiceRole.entities.Company.filter({});
     const companyMap = {};
@@ -73,7 +48,6 @@ Deno.serve(async (req) => {
     let skippedNoEvidence = 0;
 
     for (const candidate of batch) {
-      // STEP 2 — Evidence gate (generous)
       let evidenceCard = {};
       try { evidenceCard = JSON.parse(candidate.evidence_card ?? '{}'); } catch (_) {}
 
@@ -86,11 +60,13 @@ Deno.serve(async (req) => {
 
       const starCount = parseInt(starsRaw.match(/^(\d+)/)?.[1] ?? '0', 10);
       const commitCount = parseInt(commitsRaw.match(/^(\d+)/)?.[1] ?? '0', 10);
-
       const hasEvidence = ossContributions.length > 0 || starCount > 0 || commitCount > 5 || hfModels.length > 3;
 
       if (!hasEvidence) {
         skippedNoEvidence++;
+        await base44.asServiceRole.entities.Candidate.update(candidate.id, {
+          outreach_status: 'Skipped — no evidence',
+        });
         results.push({ id: candidate.id, name: candidate.name, status: 'skipped', reason: 'No public activity' });
         continue;
       }
@@ -107,10 +83,9 @@ Deno.serve(async (req) => {
       let specificReference = '';
       if (ossContributions.length > 0) specificReference = ossContributions[0];
       else if (hfModels) specificReference = hfModels;
-      else if (starsRaw) { const m = starsRaw.match(/\(([^:)]+):/); specificReference = m ? m[1] : starsRaw.split(' ').slice(0, 5).join(' '); }
+      else if (starsRaw) { const m = starsRaw.match(/\(([^:)]+):/); specificReference = m ? m[1] : starsRaw.split(' ').slice(0, 6).join(' '); }
       else if (commitsRaw) specificReference = `${commitsRaw} in the last 90 days`;
 
-      // STEP 3 — Job matching
       let matchedJob = null;
       let matchReason = '';
 
@@ -138,7 +113,6 @@ Reply with ONLY raw JSON (no markdown):
         } catch (_) { matchedJob = null; }
       }
 
-      // STEP 4+5 — Generate message
       const channel = candidate.outreach_channel;
       const platform = candidate.discovered_via ?? 'GitHub';
       const isEmail = channel === 'Email';
@@ -168,21 +142,19 @@ NO GDPR text. Output only the message.`;
       try {
         draftMessage = (await base44.integrations.Core.InvokeLLM({ prompt: messagePrompt, model: 'gpt_5_mini' })).trim();
       } catch (_) {
-        results.push({ id: candidate.id, name: candidate.name, status: 'error', reason: 'LLM failed' });
+        results.push({ id: candidate.id, name: candidate.name, status: 'error', reason: 'LLM message generation failed' });
         continue;
       }
 
       if (!draftMessage) {
-        results.push({ id: candidate.id, name: candidate.name, status: 'error', reason: 'Empty message' });
+        results.push({ id: candidate.id, name: candidate.name, status: 'error', reason: 'Empty message returned' });
         continue;
       }
 
-      // STEP 6 — Append GDPR footer in code
       const gdprFooter = `\n\n---\nAgent(cy) found your profile via publicly available information on ${platform}. We hold: your public profile URL and publicly visible work signals. We process this under legitimate interests to match candidates to relevant roles. You can request deletion or object to processing at any time: privacy@agentcy.io. If you don't respond, your data is deleted after 90 days. Reply REMOVE to be deleted immediately.`;
 
       const fullMessage = draftMessage + gdprFooter;
 
-      // STEP 7 — Save and advance to Pending Review
       await base44.asServiceRole.entities.Candidate.update(candidate.id, {
         outreach_message: fullMessage,
         outreach_status: 'Draft ready',
@@ -200,7 +172,6 @@ NO GDPR text. Output only the message.`;
 
     return Response.json({
       success: true,
-      channels_assigned_step0: channelsAssigned,
       batch_size: batch.length,
       drafts_generated: draftsGenerated,
       skipped_no_evidence: skippedNoEvidence,
