@@ -153,7 +153,7 @@ export default function Dashboard() {
         )}
       </main>
 
-      <CandidateDetailModal candidate={selected} onClose={() => setSelected(null)} />
+      <CandidateDetailModal candidate={selected} onClose={() => setSelected(null)} onSave={fetchAll} />
     </div>
   );
 }

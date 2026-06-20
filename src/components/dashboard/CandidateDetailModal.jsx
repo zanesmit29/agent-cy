@@ -1,4 +1,6 @@
-import { X, Github, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Github, ExternalLink, Save } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
 function EvidenceCard({ evidenceCard }) {
   let parsed = null;
@@ -32,17 +34,34 @@ function EvidenceCard({ evidenceCard }) {
   );
 }
 
-export default function CandidateDetailModal({ candidate, onClose }) {
-  if (!candidate) return null;
-
-  const source = candidate.discovered_via || "Unknown";
-  const channel = candidate.outreach_channel ?? "";
-  const outreachMessage = candidate.outreach_message ?? "";
+export default function CandidateDetailModal({ candidate, onClose, onSave }) {
+  const source = candidate?.discovered_via || "Unknown";
+  const channel = candidate?.outreach_channel ?? "";
 
   const gdprSeparator = "\n\n---\n";
+  const outreachMessage = candidate?.outreach_message ?? "";
   const separatorIndex = outreachMessage.indexOf(gdprSeparator);
-  const draftPart = separatorIndex !== -1 ? outreachMessage.slice(0, separatorIndex) : outreachMessage;
+  const initialDraft = separatorIndex !== -1 ? outreachMessage.slice(0, separatorIndex) : outreachMessage;
   const gdprPart = separatorIndex !== -1 ? outreachMessage.slice(separatorIndex + gdprSeparator.length) : null;
+
+  const [draftText, setDraftText] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setDraftText(initialDraft);
+  }, [candidate?.id]);
+
+  if (!candidate) return null;
+
+  const handleSaveDraft = async () => {
+    setSaving(true);
+    const fullMessage = gdprPart ? draftText + gdprSeparator + gdprPart : draftText;
+    await base44.entities.Candidate.update(candidate.id, {
+      outreach_message: fullMessage,
+    });
+    setSaving(false);
+    onSave?.();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={onClose}>
@@ -114,13 +133,30 @@ export default function CandidateDetailModal({ candidate, onClose }) {
           )}
 
           {/* Draft Message */}
-          {(draftPart || gdprPart) && (
+          {(initialDraft || gdprPart) && (
             <div>
-              <p className="font-sans text-xs text-white/40 mb-2 uppercase tracking-wider">Draft Message</p>
-              {draftPart && (
-                <div className="bg-white/5 rounded-sm border border-white/10 p-4">
-                  <p className="font-sans text-xs text-white/80 whitespace-pre-wrap leading-relaxed">{draftPart}</p>
-                </div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-sans text-xs text-white/40 uppercase tracking-wider">Draft Message</p>
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={saving}
+                  className="flex items-center gap-1.5 font-sans text-xs text-[#dba12c] hover:text-[#fbbf24] transition-colors disabled:opacity-50"
+                >
+                  {saving ? (
+                    <span className="w-3 h-3 border-2 border-[#dba12c]/30 border-t-[#dba12c] rounded-full animate-spin" />
+                  ) : (
+                    <Save className="w-3 h-3" />
+                  )}
+                  {saving ? "Saving…" : "Save"}
+                </button>
+              </div>
+              {initialDraft && (
+                <textarea
+                  value={draftText}
+                  onChange={(e) => setDraftText(e.target.value)}
+                  rows={6}
+                  className="w-full bg-white/5 border border-white/10 rounded-sm p-4 font-sans text-xs text-white/80 leading-relaxed resize-y focus:outline-none focus:border-[#dba12c]/40 transition-colors"
+                />
               )}
               {gdprPart && (
                 <div className="mt-2 bg-white/[0.03] border border-white/[0.08] rounded-sm px-3 py-2">
