@@ -13,24 +13,35 @@ const STAGES = [
   "Opted Out",
 ];
 
-const SOURCE_OPTIONS = ["All", "GitHub", "HuggingFace", "Discord", "LinkedIn", "Manual"];
+const SOURCE_OPTIONS = ["All", "GitHub", "HuggingFace"];
 
 export default function Dashboard() {
-  const [candidates, setCandidates] = useState([]);
+  const [allCandidates, setAllCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sourceFilter, setSourceFilter] = useState("All");
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    base44.entities.Candidate.list("-created_date", 2000).then((data) => {
-      setCandidates(Array.isArray(data) ? data : []);
+    async function fetchAll() {
+      const PAGE = 500;
+      let skip = 0;
+      let results = [];
+      while (true) {
+        const page = await base44.entities.Candidate.list("-created_date", PAGE, skip);
+        if (!Array.isArray(page) || page.length === 0) break;
+        results = results.concat(page);
+        if (page.length < PAGE) break;
+        skip += PAGE;
+      }
+      setAllCandidates(results);
       setLoading(false);
-    });
+    }
+    fetchAll();
   }, []);
 
   const filtered = sourceFilter === "All"
-    ? candidates
-    : candidates.filter((c) => c.discovered_via === sourceFilter);
+    ? allCandidates
+    : allCandidates.filter((c) => c.discovered_via === sourceFilter);
 
   const byStage = (stage) => filtered.filter((c) => c.current_stage === stage);
 
@@ -58,7 +69,9 @@ export default function Dashboard() {
               </button>
             ))}
           </div>
-          <span className="font-sans text-xs text-white/40 tracking-wide uppercase">Recruiter Dashboard</span>
+          <span className="font-sans text-xs text-white/40 tracking-wide uppercase">
+            {loading ? "Loading…" : `${filtered.length} / ${allCandidates.length} candidates`}
+          </span>
         </div>
       </header>
 
