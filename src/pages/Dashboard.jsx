@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import KanbanColumn from "@/components/dashboard/KanbanColumn";
 import CandidateDetailModal from "@/components/dashboard/CandidateDetailModal";
+import DiscoverPanel from "@/components/dashboard/DiscoverPanel";
 
 const STAGES = [
   "Discovered",
@@ -21,23 +22,23 @@ export default function Dashboard() {
   const [sourceFilter, setSourceFilter] = useState("All");
   const [selected, setSelected] = useState(null);
 
-  useEffect(() => {
-    async function fetchAll() {
-      const PAGE = 500;
-      let skip = 0;
-      let results = [];
-      while (true) {
-        const page = await base44.entities.Candidate.list("-created_date", PAGE, skip);
-        if (!Array.isArray(page) || page.length === 0) break;
-        results = results.concat(page);
-        if (page.length < PAGE) break;
-        skip += PAGE;
-      }
-      setAllCandidates(results);
-      setLoading(false);
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    const PAGE = 500;
+    let skip = 0;
+    let results = [];
+    while (true) {
+      const page = await base44.entities.Candidate.list("-created_date", PAGE, skip);
+      if (!Array.isArray(page) || page.length === 0) break;
+      results = results.concat(page);
+      if (page.length < PAGE) break;
+      skip += PAGE;
     }
-    fetchAll();
+    setAllCandidates(results);
+    setLoading(false);
   }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const filtered = sourceFilter === "All"
     ? allCandidates
@@ -74,6 +75,8 @@ export default function Dashboard() {
           </span>
         </div>
       </header>
+
+      <DiscoverPanel onSuccess={fetchAll} />
 
       {/* Kanban */}
       <main className="flex-1 overflow-x-auto px-8 py-8">
