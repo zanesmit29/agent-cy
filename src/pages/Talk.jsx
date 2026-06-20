@@ -126,11 +126,17 @@ export default function TalkPage() {
     return () => { document.head.removeChild(s); };
   }, []);
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (!vapiReady) return;
-    initVapi();
-    setState(STATES.CONNECTING);
-    vapiRef.current.start(undefined, undefined, SQUAD_ID);
+    try {
+      initVapi();
+      setState(STATES.CONNECTING);
+      await vapiRef.current.start(undefined, undefined, SQUAD_ID);
+    } catch (err) {
+      console.error("Start failed:", err);
+      setErrorMsg(err?.message || "Failed to start call");
+      setState(STATES.ERROR);
+    }
   };
 
   const handleEnd = async () => {
