@@ -45,7 +45,7 @@ export default function Home() {
       </main>
 
       {/* Footer — GDPR Art. 13/14 */}
-      <footer className="px-8 py-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 my-1">
+      <footer className="px-8 py-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 my-6">
         <p className="font-sans text-xs text-white/35 text-center sm:text-left max-w-xl leading-relaxed">
           Agent(cy) uses AI to discover candidates and prepare evidence. All hiring decisions are made by human recruiters. Data controller: Agent(cy) —{" "}
           <a href="mailto:privacy@agentcy.io" className="underline hover:text-white/60 transition-colors">
