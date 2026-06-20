@@ -144,12 +144,12 @@ export default function PendingReviewCard({ candidate, onUpdate }) {
       )}
 
       {/* Actions — always visible */}
-      <div className="px-3 pb-3 flex items-center gap-3">
+      <div className="px-3 pb-3 flex items-center gap-2">
         <button
           onClick={handleApprove}
           disabled={!!saving}
           title="Approve"
-          className="w-10 h-10 rounded-[12px] flex items-center justify-center text-white text-lg font-bold transition-all duration-150 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-7 h-7 rounded-[8px] flex items-center justify-center text-white text-sm font-bold transition-all duration-150 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             background: "linear-gradient(180deg, #4ade80 0%, #16a34a 100%)",
             boxShadow: "0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3)",
@@ -164,7 +164,7 @@ export default function PendingReviewCard({ candidate, onUpdate }) {
         <button
           disabled={!!saving}
           title="Hold"
-          className="w-10 h-10 rounded-[12px] flex items-center justify-center text-white text-base transition-all duration-150 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-7 h-7 rounded-[8px] flex items-center justify-center text-white text-xs transition-all duration-150 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             background: "linear-gradient(180deg, #fbbf24 0%, #d97706 100%)",
             boxShadow: "0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3)",
@@ -176,7 +176,7 @@ export default function PendingReviewCard({ candidate, onUpdate }) {
           onClick={handleDecline}
           disabled={!!saving}
           title="Don't contact"
-          className="w-10 h-10 rounded-[12px] flex items-center justify-center text-white text-lg font-bold transition-all duration-150 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-7 h-7 rounded-[8px] flex items-center justify-center text-white text-sm font-bold transition-all duration-150 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{
             background: "linear-gradient(180deg, #f87171 0%, #dc2626 100%)",
             boxShadow: "0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3)",
