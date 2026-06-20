@@ -101,12 +101,17 @@ export default function Dashboard() {
           <button
             onClick={handleGenerateDrafts}
             disabled={generatingDrafts}
-            className="flex items-center gap-2 bg-[#dba12c] hover:bg-[#c8912a] disabled:opacity-50 disabled:cursor-not-allowed text-[#0a0e13] font-sans text-xs font-semibold px-4 py-2 rounded-sm transition-colors"
+            className="flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-[#0a0e13] font-sans text-xs font-semibold px-4 py-2.5 transition-all duration-150 hover:scale-[1.03] active:scale-[0.97]"
+            style={{
+              background: "linear-gradient(180deg, #fbbf24 0%, #d97706 100%)",
+              borderRadius: "12px",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3)",
+            }}
           >
             {generatingDrafts ? (
               <><span className="w-3 h-3 border-2 border-[#0a0e13]/30 border-t-[#0a0e13] rounded-full animate-spin" /> Generating…</>
             ) : (
-              "⚡ Generate Outreach Drafts"
+              "Generate Outreach Drafts"
             )}
           </button>
         </div>
