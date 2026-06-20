@@ -200,7 +200,7 @@ export default function TalkPage() {
       )}
 
       <div style={{ position: "absolute", bottom: "24px", fontSize: "12px", color: dark, display: "flex", gap: "20px", flexWrap: "wrap", justifyContent: "center", fontFamily: "-apple-system, sans-serif" }}>
-        <span>Processed under GDPR — 90 day retention</span>
+        <span>Processed under GDPR · 90 day retention</span>
         <a href="mailto:privacy@agentcy.io" style={{ color: dark, textDecoration: "none" }}>Remove my data</a>
       </div>
     </div>
