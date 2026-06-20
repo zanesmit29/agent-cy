@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
 
     // Load open jobs + companies once
     const openJobs = await base44.asServiceRole.entities.Job.filter({ status: 'Open' });
-    const allCompanies = await base44.asServiceRole.entities.Company.list();
+    const allCompanies = await base44.asServiceRole.entities.Company.filter({});
     const companyMap = {};
     for (const co of allCompanies ?? []) companyMap[co.id] = co.name;
 
