@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
 
     const slotsByCompany = {};
     for (const job of allJobs) {
-      const companyId = job.company;
+      const companyId = job.company_id;
       const slots = job.open_slots || 0;
       slotsByCompany[companyId] = (slotsByCompany[companyId] || 0) + slots;
     }
@@ -26,14 +26,14 @@ Deno.serve(async (req) => {
     const updates = [];
 
     for (const job of allJobs) {
-      const totalSlots = slotsByCompany[job.company] || 0;
+      const totalSlots = slotsByCompany[job.company_id] || 0;
       const mode = modeForCompany(totalSlots);
 
       await base44.asServiceRole.entities.Job.update(job.id, {
         suggested_outreach_mode: mode,
       });
 
-      updates.push({ jobId: job.id, title: job.title, company: job.company, totalSlots, mode });
+      updates.push({ jobId: job.id, title: job.title, company_id: job.company_id, totalSlots, mode });
     }
 
     return Response.json({ success: true, jobs_updated: updates.length, breakdown: updates });
