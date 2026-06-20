@@ -112,6 +112,10 @@
     "vapi_call_id": {
       "type": "string",
       "description": "Vapi call ID from the most recent AI intake conversation"
+    },
+    "vapi_transcript": {
+      "type": "string",
+      "description": "Full transcript from the most recent Vapi AI intake call"
     }
   },
   "required": [
