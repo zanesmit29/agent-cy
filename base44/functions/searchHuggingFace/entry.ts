@@ -146,7 +146,6 @@ async function processUsername(username, existingGitHubUrls, existingHFUrls, bas
 
   await base44.asServiceRole.entities.Candidate.create({
     name: hfProfile.fullname || username,
-    email: `${username}@huggingface-noemail.placeholder`,
     github_url: githubHandle ? `https://github.com/${githubHandle}` : null,
     huggingface_url: hfUrl,
     current_stage: 'Discovered',

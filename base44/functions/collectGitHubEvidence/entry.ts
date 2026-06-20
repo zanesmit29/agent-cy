@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
 
     const candidate = await base44.asServiceRole.entities.Candidate.create({
       name: profile.name ?? profile.login,
-      email: profile.email ?? `${username}@github-noemail.placeholder`,
+      email: profile.email || undefined,
       github_url: `https://github.com/${username}`,
       current_stage: 'Discovered',
       discovered_via: 'GitHub',
