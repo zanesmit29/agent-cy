@@ -32,16 +32,16 @@ function EvidenceFacts({ evidenceCard }) {
 }
 
 export default function PendingReviewCard({ candidate, onUpdate }) {
+  const [expanded, setExpanded] = useState(false);
   const [message, setMessage] = useState(candidate.outreach_message ?? "");
-  const [saving, setSaving] = useState(null); // 'approve' | 'hold' | 'decline'
+  const [saving, setSaving] = useState(null);
   const [dontContactReason, setDontContactReason] = useState("");
   const [showDeclineInput, setShowDeclineInput] = useState(false);
 
   const source = candidate.discovered_via ?? "Unknown";
-  const channel = candidate.outreach_channel ?? "—";
+  const channel = candidate.outreach_channel ?? "";
 
-  const sourceColor = source === "HuggingFace" ? "text-[#ff9900] bg-[#ff9900]/10" : source === "GitHub" ? "text-[#dba12c] bg-[#dba12c]/10" : "text-white/50 bg-white/5";
-  const channelColor = channel === "Email" ? "text-blue-400 bg-blue-400/10" : channel === "LinkedIn" ? "text-sky-400 bg-sky-400/10" : "text-purple-400 bg-purple-400/10";
+  const contactInfo = candidate.contact_path || candidate.email || "";
 
   const handleApprove = async () => {
     setSaving("approve");
@@ -60,7 +60,6 @@ export default function PendingReviewCard({ candidate, onUpdate }) {
   const handleDecline = async () => {
     if (!showDeclineInput) { setShowDeclineInput(true); return; }
     setSaving("decline");
-    // Stays in Pending Review — no stage change, just log the reason note if provided
     const note = dontContactReason.trim();
     await base44.entities.Candidate.update(candidate.id, {
       outreach_message: note ? `[Do not contact: ${note}]\n\n${message}` : message,
@@ -69,63 +68,83 @@ export default function PendingReviewCard({ candidate, onUpdate }) {
     onUpdate?.();
   };
 
-  // Split message into draft part and GDPR footer for display
   const gdprSeparator = "\n\n---\n";
   const separatorIndex = message.indexOf(gdprSeparator);
   const draftPart = separatorIndex !== -1 ? message.slice(0, separatorIndex) : message;
   const gdprPart = separatorIndex !== -1 ? message.slice(separatorIndex + gdprSeparator.length) : null;
 
   return (
-    <div className="bg-white/5 border border-white/15 rounded-sm p-4 space-y-4">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2">
-        <p className="font-sans text-sm text-white font-medium">{candidate.name}</p>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <span className={`font-sans text-xs px-2 py-0.5 rounded-sm ${sourceColor}`}>{source}</span>
-          <span className={`font-sans text-xs px-2 py-0.5 rounded-sm ${channelColor}`}>{channel}</span>
-        </div>
-      </div>
-
-      {/* Evidence */}
-      {candidate.evidence_card && (
-        <div>
-          <p className="font-sans text-xs text-white/30 uppercase tracking-wider mb-2">Evidence</p>
-          <div className="bg-black/20 rounded-sm p-3">
-            <EvidenceFacts evidenceCard={candidate.evidence_card} />
+    <div className="bg-white/5 border border-white/10 rounded-sm">
+      {/* Compact header — always visible */}
+      <div
+        onClick={() => setExpanded(!expanded)}
+        className="px-3 pt-3 pb-2 cursor-pointer hover:bg-white/[0.07] transition-colors"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-sans text-sm text-white font-medium truncate">{candidate.name}</p>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-[#dba12c]/10 text-[#dba12c]">GitHub</span>
+            {channel === "Email" && (
+              <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-blue-400/10 text-blue-400">Email</span>
+            )}
+            {channel === "LinkedIn" && (
+              <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-sky-400/10 text-sky-400">LinkedIn</span>
+            )}
+            {channel === "Twitter DM" && (
+              <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-purple-400/10 text-purple-400">Twitter DM</span>
+            )}
           </div>
         </div>
-      )}
-
-      {/* Draft message */}
-      <div>
-        <p className="font-sans text-xs text-white/30 uppercase tracking-wider mb-2">Draft Message</p>
-        <textarea
-          value={draftPart}
-          onChange={(e) => setMessage(gdprPart ? e.target.value + gdprSeparator + gdprPart : e.target.value)}
-          rows={6}
-          className="w-full bg-black/20 border border-white/10 rounded-sm px-3 py-2.5 font-sans text-xs text-white/85 placeholder-white/25 focus:outline-none focus:border-white/25 resize-none transition-colors"
-        />
-        {gdprPart && (
-          <div className="mt-1 bg-white/3 border border-white/8 rounded-sm px-3 py-2">
-            <p className="font-sans text-xs text-white/25 uppercase tracking-wider mb-1">Mandatory GDPR Footer (not editable)</p>
-            <p className="font-sans text-xs text-white/30 whitespace-pre-wrap">{gdprPart}</p>
-          </div>
+        {contactInfo && (
+          <p className="font-sans text-xs text-white/35 mt-1 truncate">{contactInfo}</p>
         )}
       </div>
 
-      {/* Don't contact reason */}
-      {showDeclineInput && (
-        <input
-          type="text"
-          value={dontContactReason}
-          onChange={(e) => setDontContactReason(e.target.value)}
-          placeholder="Optional reason (e.g. overqualified, wrong location)…"
-          className="w-full bg-black/20 border border-white/10 rounded-sm px-3 py-2 font-sans text-xs text-white/85 placeholder-white/25 focus:outline-none focus:border-white/25 transition-colors"
-        />
+      {/* Expanded detail — only when clicked */}
+      {expanded && (
+        <div className="px-3 pb-3 space-y-4 border-t border-white/5 pt-3">
+          {/* Evidence */}
+          {candidate.evidence_card && (
+            <div>
+              <p className="font-sans text-xs text-white/30 uppercase tracking-wider mb-2">Evidence</p>
+              <div className="bg-black/20 rounded-sm p-3">
+                <EvidenceFacts evidenceCard={candidate.evidence_card} />
+              </div>
+            </div>
+          )}
+
+          {/* Draft message */}
+          <div>
+            <p className="font-sans text-xs text-white/30 uppercase tracking-wider mb-2">Draft Message</p>
+            <textarea
+              value={draftPart}
+              onChange={(e) => setMessage(gdprPart ? e.target.value + gdprSeparator + gdprPart : e.target.value)}
+              rows={6}
+              className="w-full bg-black/20 border border-white/10 rounded-sm px-3 py-2.5 font-sans text-xs text-white/85 placeholder-white/25 focus:outline-none focus:border-white/25 resize-none transition-colors"
+            />
+            {gdprPart && (
+              <div className="mt-1 bg-white/[0.03] border border-white/[0.08] rounded-sm px-3 py-2">
+                <p className="font-sans text-xs text-white/25 uppercase tracking-wider mb-1">Mandatory GDPR Footer (not editable)</p>
+                <p className="font-sans text-xs text-white/30 whitespace-pre-wrap">{gdprPart}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Don't contact reason */}
+          {showDeclineInput && (
+            <input
+              type="text"
+              value={dontContactReason}
+              onChange={(e) => setDontContactReason(e.target.value)}
+              placeholder="Optional reason (e.g. overqualified, wrong location)…"
+              className="w-full bg-black/20 border border-white/10 rounded-sm px-3 py-2 font-sans text-xs text-white/85 placeholder-white/25 focus:outline-none focus:border-white/25 transition-colors"
+            />
+          )}
+        </div>
       )}
 
-      {/* Actions */}
-      <div className="flex gap-2">
+      {/* Actions — always visible */}
+      <div className="px-3 pb-3 flex gap-2">
         <button
           onClick={handleApprove}
           disabled={!!saving}
