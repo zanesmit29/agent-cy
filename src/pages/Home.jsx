@@ -18,7 +18,7 @@ export default function Home() {
 
         
 
-        <h1 className="font-heading text-white text-5xl md:text-6xl lg:text-7xl leading-[1.05] font-medium max-w-3xl mb-12 mt-12">We connect engineers to the right roles. Our AI does the groundwork.
+        <h1 className="font-heading text-white text-5xl md:text-6xl lg:text-7xl leading-[1.05] font-medium max-w-3xl mb-12 mt-12">We connect engineers to the right roles. Our AI does the groundwork.
 
 
         </h1>
@@ -28,8 +28,8 @@ export default function Home() {
             width="100%"
             style={{ aspectRatio: "16/9", display: "block" }}
             controls
-            playsInline
-          >
+            playsInline>
+            
             <source src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/5a3eeabd7_agentcy_intro.mp4" type="video/mp4" />
           </video>
           
