@@ -24,12 +24,14 @@ export default function Home() {
         </h1>
 
         <div className="w-full max-w-[800px] mb-10 mx-auto" style={{ borderRadius: "8px", overflow: "hidden" }}>
-          <iframe
+          <video
             width="100%"
-            style={{ aspectRatio: "16/9", display: "block", border: "none" }}
-            src="https://www.youtube.com/embed/ekJhgic6ll4?modestbranding=1&rel=0&showinfo=0"
-            title="Agent(cy) intro"
-            allowFullScreen />
+            style={{ aspectRatio: "16/9", display: "block" }}
+            controls
+            playsInline
+          >
+            <source src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/5a3eeabd7_agentcy_intro.mp4" type="video/mp4" />
+          </video>
           
         </div>
 
