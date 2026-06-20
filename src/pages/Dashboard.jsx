@@ -137,9 +137,9 @@ export default function Dashboard() {
                 key={stage}
                 title={stage}
                 candidates={byStage(stage)}
-                onCardClick={stage === "Pending Review" ? undefined : setSelected}
+                onCardClick={setSelected}
                 renderCard={stage === "Pending Review"
-                  ? (c) => <PendingReviewCard key={c.id} candidate={c} onUpdate={fetchAll} />
+                  ? (c) => <PendingReviewCard key={c.id} candidate={c} onUpdate={fetchAll} onClick={() => setSelected(c)} />
                   : undefined
                 }
               />
