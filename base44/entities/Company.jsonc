@@ -9,6 +9,28 @@
     "contact_email": {
       "type": "string",
       "description": "Primary contact email"
+    },
+    "website": {
+      "type": "string",
+      "description": "Company website URL"
+    },
+    "industry": {
+      "type": "string",
+      "description": "Industry or sector"
+    },
+    "company_size": {
+      "type": "string",
+      "enum": [
+        "1\u201310",
+        "11\u201350",
+        "51\u2013200",
+        "200+"
+      ],
+      "description": "Company headcount range"
+    },
+    "contact_name": {
+      "type": "string",
+      "description": "Primary contact person name"
     }
   },
   "required": [

@@ -32,6 +32,14 @@
       "type": "string",
       "description": "HuggingFace profile URL"
     },
+    "linkedin_url": {
+      "type": "string",
+      "description": "LinkedIn profile URL"
+    },
+    "twitter_handle": {
+      "type": "string",
+      "description": "Twitter / X handle"
+    },
     "discovered_via": {
       "type": "string",
       "enum": [
@@ -49,6 +57,41 @@
     "contact_path": {
       "type": "string",
       "description": "Specific URL or handle that makes the candidate reachable \u2014 source of truth for outreach"
+    },
+    "outreach_channel": {
+      "type": "string",
+      "enum": [
+        "Email",
+        "LinkedIn",
+        "Twitter DM"
+      ],
+      "description": "Channel to use for outreach"
+    },
+    "outreach_status": {
+      "type": "string",
+      "enum": [
+        "Not contacted",
+        "Draft ready",
+        "Approved",
+        "Sent",
+        "Responded",
+        "Opted Out"
+      ],
+      "default": "Not contacted",
+      "description": "Current outreach status"
+    },
+    "outreach_message": {
+      "type": "string",
+      "description": "Drafted or sent outreach message"
+    },
+    "outreach_approved_by": {
+      "type": "string",
+      "description": "Name or ID of recruiter who approved the outreach"
+    },
+    "outreach_approved_at": {
+      "type": "string",
+      "format": "date",
+      "description": "Date outreach was approved"
     },
     "opted_out": {
       "type": "boolean",

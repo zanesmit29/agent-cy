@@ -30,6 +30,48 @@
         "Other"
       ],
       "description": "Type of engineering role"
+    },
+    "company_id": {
+      "type": "string",
+      "description": "Link to Companies entity"
+    },
+    "description": {
+      "type": "string",
+      "description": "Full job description"
+    },
+    "conversational_description": {
+      "type": "string",
+      "description": "Short conversational description, max 2 sentences"
+    },
+    "salary_range": {
+      "type": "string",
+      "description": "Salary range, e.g. \u20ac80k\u2013\u20ac120k"
+    },
+    "location": {
+      "type": "string",
+      "description": "Job location"
+    },
+    "work_type": {
+      "type": "string",
+      "enum": [
+        "Remote",
+        "Hybrid",
+        "On-site"
+      ],
+      "description": "Work arrangement type"
+    },
+    "open_slots": {
+      "type": "number",
+      "description": "Number of open positions"
+    },
+    "suggested_outreach_mode": {
+      "type": "string",
+      "enum": [
+        "Passive",
+        "Light",
+        "Active"
+      ],
+      "description": "Suggested outreach intensity for this role"
     }
   },
   "required": [
