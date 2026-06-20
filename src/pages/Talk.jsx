@@ -9,6 +9,7 @@ const STATES = { IDLE: "idle", CONNECTING: "connecting", LIVE: "live", ENDED: "e
 export default function TalkPage() {
   const [state, setState] = useState(STATES.IDLE);
   const [agentSpeaking, setAgentSpeaking] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const vapiRef = useRef(null);
   const orbRef = useRef(null);
   const ring1Ref = useRef(null);
@@ -86,7 +87,12 @@ export default function TalkPage() {
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
     vapi.on("call-end", () => { setState(STATES.ENDED); cleanup(); });
-    vapi.on("error", () => { setState(STATES.ERROR); cleanup(); });
+    vapi.on("error", (e) => { 
+      console.error("Vapi error:", e); 
+      setErrorMessage(e?.message || e?.error?.message || JSON.stringify(e) || "Unknown error"); 
+      setState(STATES.ERROR); 
+      cleanup(); 
+    });
     vapiRef.current = vapi;
   };
 
@@ -137,8 +143,13 @@ export default function TalkPage() {
         </p>
       )}
       {state === STATES.ERROR && (
-        <p style={{ fontSize: "14px", color: "#b87171", margin: "0 0 48px", textAlign: "center", fontFamily: "-apple-system, sans-serif" }}>
+        <p style={{ fontSize: "14px", color: "#b87171", margin: "0 0 12px", textAlign: "center", fontFamily: "-apple-system, sans-serif" }}>
           The call couldn't connect. Please try again or email hello@agentcy.io
+        </p>
+      )}
+      {state === STATES.ERROR && errorMessage && (
+        <p style={{ fontSize: "12px", color: "#6b4040", margin: "0 0 36px", textAlign: "center", fontFamily: "monospace", maxWidth: "480px", wordBreak: "break-all" }}>
+          {errorMessage}
         </p>
       )}
       {state === STATES.CONNECTING && <div style={{ marginBottom: "48px" }} />}
