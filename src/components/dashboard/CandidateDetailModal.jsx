@@ -35,7 +35,7 @@ function EvidenceCard({ evidenceCard }) {
 export default function CandidateDetailModal({ candidate, onClose }) {
   if (!candidate) return null;
 
-  const source = candidate.discovered_via ?? "GitHub";
+  const source = candidate.discovered_via || "Unknown";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={onClose}>

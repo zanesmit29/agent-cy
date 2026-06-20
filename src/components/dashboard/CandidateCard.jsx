@@ -1,9 +1,7 @@
-import { useState } from "react";
-
 export default function CandidateCard({ candidate, onClick }) {
-  const source = candidate.discovered_via ?? "GitHub";
-  const sourceColor = source === "HuggingFace" ? "text-[#ff9900]" : "text-[#dba12c]";
-  const sourceDot = source === "HuggingFace" ? "bg-[#ff9900]" : "bg-[#dba12c]";
+  const source = candidate.discovered_via || "Unknown";
+  const sourceColor = source === "HuggingFace" ? "text-[#ff9900]" : source === "GitHub" ? "text-[#dba12c]" : "text-white/40";
+  const sourceDot = source === "HuggingFace" ? "bg-[#ff9900]" : source === "GitHub" ? "bg-[#dba12c]" : "bg-white/30";
 
   return (
     <div
