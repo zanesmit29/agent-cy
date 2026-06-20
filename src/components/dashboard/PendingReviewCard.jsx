@@ -144,26 +144,51 @@ export default function PendingReviewCard({ candidate, onUpdate }) {
       )}
 
       {/* Actions — always visible */}
-      <div className="px-3 pb-3 flex gap-2">
+      <div className="px-3 pb-3 flex items-center gap-3">
         <button
           onClick={handleApprove}
           disabled={!!saving}
-          className="flex-1 bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-600/30 text-emerald-400 font-sans text-xs py-1.5 rounded-sm transition-colors disabled:opacity-50"
+          title="Approve"
+          className="w-10 h-10 rounded-[12px] flex items-center justify-center text-white text-lg font-bold transition-all duration-150 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: "linear-gradient(180deg, #4ade80 0%, #16a34a 100%)",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3)",
+          }}
         >
-          {saving === "approve" ? "Saving…" : "✅ Approve"}
+          {saving === "approve" ? (
+            <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+          ) : (
+            "✓"
+          )}
         </button>
         <button
           disabled={!!saving}
-          className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 font-sans text-xs py-1.5 rounded-sm transition-colors disabled:opacity-50"
+          title="Hold"
+          className="w-10 h-10 rounded-[12px] flex items-center justify-center text-white text-base transition-all duration-150 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: "linear-gradient(180deg, #fbbf24 0%, #d97706 100%)",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3)",
+          }}
         >
-          ⏸ Hold
+          ⏸
         </button>
         <button
           onClick={handleDecline}
           disabled={!!saving}
-          className="flex-1 bg-red-600/10 hover:bg-red-600/20 border border-red-600/20 text-red-400/70 font-sans text-xs py-1.5 rounded-sm transition-colors disabled:opacity-50"
+          title="Don't contact"
+          className="w-10 h-10 rounded-[12px] flex items-center justify-center text-white text-lg font-bold transition-all duration-150 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            background: "linear-gradient(180deg, #f87171 0%, #dc2626 100%)",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3)",
+          }}
         >
-          {saving === "decline" ? "Saving…" : showDeclineInput ? "Confirm" : "❌ Don't contact"}
+          {saving === "decline" ? (
+            <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+          ) : showDeclineInput ? (
+            "✓"
+          ) : (
+            "✕"
+          )}
         </button>
       </div>
     </div>
