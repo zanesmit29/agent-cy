@@ -23,6 +23,19 @@ export default function Home() {
           <em className="text-white/55">Our AI does the groundwork.</em>
         </h1>
 
+        <div className="w-full max-w-[800px] mb-10">
+          <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+            <iframe
+              className="absolute inset-0 w-full h-full rounded-lg"
+              src="https://www.youtube.com/embed/ekJhgic6ll4"
+              title="Agent(cy) intro"
+              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ border: "none" }}
+            />
+          </div>
+        </div>
+
         <p className="font-sans text-white/50 text-base md:text-lg leading-relaxed mb-14 max-w-lg">
           We look at real work, not CVs. If we reached out, a recruiter has reviewed your profile and wants to learn more.
         </p>
