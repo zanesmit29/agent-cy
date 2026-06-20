@@ -1,7 +1,8 @@
 export default function CandidateCard({ candidate, onClick }) {
   const source = candidate.discovered_via || "Unknown";
-  const sourceColor = source === "HuggingFace" ? "text-[#ff9900]" : source === "GitHub" ? "text-[#dba12c]" : "text-white/40";
-  const sourceDot = source === "HuggingFace" ? "bg-[#ff9900]" : source === "GitHub" ? "bg-[#dba12c]" : "bg-white/30";
+  const channel = candidate.outreach_channel ?? "";
+  const stage = candidate.current_stage ?? "";
+  const isBeyondDiscovered = stage !== "Discovered";
 
   return (
     <div
@@ -10,8 +11,16 @@ export default function CandidateCard({ candidate, onClick }) {
     >
       <p className="font-sans text-sm text-white font-medium truncate">{candidate.name}</p>
       <div className="flex items-center gap-1.5 mt-1">
-        <span className={`w-1.5 h-1.5 rounded-full ${sourceDot} flex-shrink-0`} />
-        <span className={`font-sans text-xs ${sourceColor}`}>{source}</span>
+        <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-[#dba12c]/10 text-[#dba12c]">{source}</span>
+        {isBeyondDiscovered && channel === "Email" && (
+          <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-blue-400/10 text-blue-400">Email</span>
+        )}
+        {isBeyondDiscovered && channel === "LinkedIn" && (
+          <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-sky-400/10 text-sky-400">LinkedIn</span>
+        )}
+        {isBeyondDiscovered && channel === "Twitter DM" && (
+          <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-purple-400/10 text-purple-400">Twitter DM</span>
+        )}
       </div>
       {candidate.contact_path && (
         <p className="font-sans text-xs text-white/35 mt-1 truncate">{candidate.contact_path}</p>
