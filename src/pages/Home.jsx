@@ -18,7 +18,7 @@ export default function Home() {
 
         
 
-        <h1 className="font-heading text-white text-5xl md:text-6xl lg:text-7xl leading-[1.05] mb-6 font-medium max-w-3xl mt-10">We connect engineers to the right roles. Our AI does the groundwork.
+        <h1 className="font-heading text-white text-5xl md:text-6xl lg:text-7xl leading-[1.05] font-medium max-w-3xl mt-10 mb-10">We connect engineers to the right roles. Our AI does the groundwork.
 
 
         </h1>
