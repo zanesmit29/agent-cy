@@ -164,7 +164,24 @@ export default function TalkPage() {
     vapiRef.current.start(undefined, undefined, SQUAD_ID);
   };
 
-  const handleEnd = () => vapiRef.current?.stop();
+  const handleEnd = async () => {
+    const callObj = vapiRef?.current;
+    let callId = null;
+    if (callObj) {
+      callId = callObj?.call?.id || null;
+      callObj.stop();
+    }
+    setState(STATES.ENDED);
+    const cid = candidateIdRef.current;
+    if (callId && cid) {
+      try {
+        await base44.entities.Candidate.update(cid, { vapi_call_id: callId });
+      } catch(e) {}
+      base44.functions.invoke("fetchVapiTranscript", { call_id: callId, candidate_id: cid })
+        .catch(() => {});
+    }
+    setTimeout(() => { window.location.href = "/candidate-dashboard"; }, 2500);
+  };
   const handleRestart = () => { vapiRef.current = null; setErrorMessage(""); setState(STATES.IDLE); };
 
   return (
