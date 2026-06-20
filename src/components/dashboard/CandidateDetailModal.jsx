@@ -36,6 +36,13 @@ export default function CandidateDetailModal({ candidate, onClose }) {
   if (!candidate) return null;
 
   const source = candidate.discovered_via || "Unknown";
+  const channel = candidate.outreach_channel ?? "";
+  const outreachMessage = candidate.outreach_message ?? "";
+
+  const gdprSeparator = "\n\n---\n";
+  const separatorIndex = outreachMessage.indexOf(gdprSeparator);
+  const draftPart = separatorIndex !== -1 ? outreachMessage.slice(0, separatorIndex) : outreachMessage;
+  const gdprPart = separatorIndex !== -1 ? outreachMessage.slice(separatorIndex + gdprSeparator.length) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={onClose}>
@@ -56,6 +63,20 @@ export default function CandidateDetailModal({ candidate, onClose }) {
 
         {/* Body */}
         <div className="px-6 py-5 space-y-5">
+          {/* Source & channel badges */}
+          <div className="flex flex-wrap gap-1.5">
+            <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-[#dba12c]/10 text-[#dba12c]">{source}</span>
+            {channel === "Email" && (
+              <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-blue-400/10 text-blue-400">Email</span>
+            )}
+            {channel === "LinkedIn" && (
+              <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-sky-400/10 text-sky-400">LinkedIn</span>
+            )}
+            {channel === "Twitter DM" && (
+              <span className="font-sans text-xs px-2 py-0.5 rounded-sm bg-purple-400/10 text-purple-400">Twitter DM</span>
+            )}
+          </div>
+
           {/* Links */}
           <div className="flex flex-wrap gap-3">
             {candidate.github_url && (
@@ -89,6 +110,24 @@ export default function CandidateDetailModal({ candidate, onClose }) {
               <div className="bg-white/5 rounded-sm border border-white/10 p-4">
                 <EvidenceCard evidenceCard={candidate.evidence_card} />
               </div>
+            </div>
+          )}
+
+          {/* Draft Message */}
+          {(draftPart || gdprPart) && (
+            <div>
+              <p className="font-sans text-xs text-white/40 mb-2 uppercase tracking-wider">Draft Message</p>
+              {draftPart && (
+                <div className="bg-white/5 rounded-sm border border-white/10 p-4">
+                  <p className="font-sans text-xs text-white/80 whitespace-pre-wrap leading-relaxed">{draftPart}</p>
+                </div>
+              )}
+              {gdprPart && (
+                <div className="mt-2 bg-white/[0.03] border border-white/[0.08] rounded-sm px-3 py-2">
+                  <p className="font-sans text-xs text-white/25 uppercase tracking-wider mb-1">GDPR Footer</p>
+                  <p className="font-sans text-xs text-white/30 whitespace-pre-wrap">{gdprPart}</p>
+                </div>
+              )}
             </div>
           )}
 
