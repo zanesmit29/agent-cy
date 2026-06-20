@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import KanbanColumn from "@/components/dashboard/KanbanColumn";
 import CandidateDetailModal from "@/components/dashboard/CandidateDetailModal";
 import DiscoverPanel from "@/components/dashboard/DiscoverPanel";
+import PendingReviewCard from "@/components/dashboard/PendingReviewCard";
 
 const STAGES = [
   "Discovered",
@@ -21,6 +22,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [sourceFilter, setSourceFilter] = useState("All");
   const [selected, setSelected] = useState(null);
+  const [generatingDrafts, setGeneratingDrafts] = useState(false);
+  const [draftResult, setDraftResult] = useState(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -39,6 +42,21 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const handleGenerateDrafts = useCallback(async () => {
+    setGeneratingDrafts(true);
+    setDraftResult(null);
+    try {
+      const res = await base44.functions.invoke("generateOutreachDraft", {});
+      const data = res.data;
+      setDraftResult({ type: "success", message: `Done — ${data.drafts_generated} draft${data.drafts_generated !== 1 ? "s" : ""} generated, ${data.skipped_no_evidence ?? 0} skipped (insufficient evidence).` });
+      fetchAll();
+    } catch (err) {
+      setDraftResult({ type: "error", message: err?.response?.data?.error ?? err?.message ?? "Failed to generate drafts." });
+    } finally {
+      setGeneratingDrafts(false);
+    }
+  }, [fetchAll]);
 
   const filtered = sourceFilter === "All"
     ? allCandidates
@@ -73,8 +91,29 @@ export default function Dashboard() {
           <span className="font-sans text-xs text-white/40 tracking-wide uppercase">
             {loading ? "Loading…" : `${filtered.length} / ${allCandidates.length} candidates`}
           </span>
+          <button
+            onClick={handleGenerateDrafts}
+            disabled={generatingDrafts}
+            className="flex items-center gap-2 bg-[#dba12c] hover:bg-[#c8912a] disabled:opacity-50 disabled:cursor-not-allowed text-[#0a0e13] font-sans text-xs font-semibold px-4 py-2 rounded-sm transition-colors"
+          >
+            {generatingDrafts ? (
+              <><span className="w-3 h-3 border-2 border-[#0a0e13]/30 border-t-[#0a0e13] rounded-full animate-spin" /> Generating…</>
+            ) : (
+              "⚡ Generate Outreach Drafts"
+            )}
+          </button>
         </div>
       </header>
+
+      {draftResult && (
+        <div className={`mx-8 mt-4 px-4 py-2.5 rounded-sm font-sans text-xs border ${
+          draftResult.type === "success"
+            ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+            : "bg-red-500/10 border-red-500/25 text-red-400"
+        }`}>
+          {draftResult.message}
+        </div>
+      )}
 
       <DiscoverPanel onSuccess={fetchAll} />
 
@@ -91,7 +130,11 @@ export default function Dashboard() {
                 key={stage}
                 title={stage}
                 candidates={byStage(stage)}
-                onCardClick={setSelected}
+                onCardClick={stage === "Pending Review" ? undefined : setSelected}
+                renderCard={stage === "Pending Review"
+                  ? (c) => <PendingReviewCard key={c.id} candidate={c} onUpdate={fetchAll} />
+                  : undefined
+                }
               />
             ))}
           </div>

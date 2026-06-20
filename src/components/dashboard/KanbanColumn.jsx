@@ -1,6 +1,6 @@
 import CandidateCard from "./CandidateCard";
 
-export default function KanbanColumn({ title, candidates, onCardClick }) {
+export default function KanbanColumn({ title, candidates, onCardClick, renderCard }) {
   return (
     <div className="w-64 flex flex-col flex-shrink-0">
       <div className="mb-3 px-1">
@@ -21,9 +21,11 @@ export default function KanbanColumn({ title, candidates, onCardClick }) {
             <p className="font-sans text-xs text-white/20">No candidates</p>
           </div>
         ) : (
-          candidates.map((c) => (
-            <CandidateCard key={c.id} candidate={c} onClick={onCardClick} />
-          ))
+          candidates.map((c) =>
+            renderCard ? renderCard(c) : (
+              <CandidateCard key={c.id} candidate={c} onClick={onCardClick} />
+            )
+          )
         )}
       </div>
     </div>
