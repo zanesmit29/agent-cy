@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Vapi from "@vapi-ai/web";
 import { base44 } from "@/api/base44Client";
 
+
 const SQUAD_ID = "c767d939-3822-495c-bbaf-f7c880b2d093";
 
 const STATES = { IDLE: "idle", CONNECTING: "connecting", LIVE: "live", ENDED: "ended", ERROR: "error" };
@@ -13,8 +14,11 @@ export default function TalkPage() {
   const [agentSpeaking, setAgentSpeaking] = useState(false);
   const [vapiReady, setVapiReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [candidateId, setCandidateId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const vapiRef = useRef(null);
   const apiKeyRef = useRef(null);
+  const candidateIdRef = useRef(null);
   const orbRef = useRef(null);
   const ring1Ref = useRef(null);
   const ring2Ref = useRef(null);
@@ -71,6 +75,37 @@ export default function TalkPage() {
     return () => cancelAnimationFrame(frame);
   }, [state, agentSpeaking]);
 
+  useEffect(() => {
+    const matchOrCreateCandidate = async () => {
+      try {
+        const user = await base44.auth.me();
+        if (!user?.email) return;
+        setCurrentUser(user);
+
+        const existing = await base44.entities.Candidate.filter({ email: user.email });
+        if (existing && existing.length > 0) {
+          setCandidateId(existing[0].id);
+          candidateIdRef.current = existing[0].id;
+        } else {
+          const gdprDue = new Date();
+          gdprDue.setDate(gdprDue.getDate() + 90);
+          const newCandidate = await base44.entities.Candidate.create({
+            name: user.full_name || user.email,
+            email: user.email,
+            current_stage: "Discovered",
+            discovered_via: "Self-registered",
+            gdpr_deletion_due: gdprDue.toISOString().split("T")[0],
+          });
+          setCandidateId(newCandidate.id);
+          candidateIdRef.current = newCandidate.id;
+        }
+      } catch (e) {
+        console.warn("Could not match/create candidate:", e);
+      }
+    };
+    matchOrCreateCandidate();
+  }, []);
+
   const startMicAnalyser = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -97,7 +132,22 @@ export default function TalkPage() {
     vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
-    vapi.on("call-end", () => { setState(STATES.ENDED); cleanup(); setTimeout(() => { navigate("/candidate-dashboard"); }, 2500); });
+    vapi.on("call-end", async (call) => {
+      setState(STATES.ENDED);
+      cleanup();
+
+      if (call?.id && candidateIdRef.current) {
+        try {
+          await base44.entities.Candidate.update(candidateIdRef.current, { vapi_call_id: call.id });
+          base44.functions.invoke("fetchVapiTranscript", { call_id: call.id, candidate_id: candidateIdRef.current })
+            .catch((e) => console.warn("fetchVapiTranscript error:", e));
+        } catch (e) {
+          console.warn("Could not save call data:", e);
+        }
+      }
+
+      setTimeout(() => { window.location.href = "/candidate-dashboard"; }, 2500);
+    });
     vapi.on("error", (e) => {
       console.error("Vapi error:", e);
       setErrorMessage(e?.message || e?.error?.message || JSON.stringify(e) || "Unknown error");
