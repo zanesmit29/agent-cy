@@ -1,10 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+const BATCH_SIZE = 5;
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // STEP 0 — Run selectOutreachChannel logic internally
+    // STEP 0 — selectOutreachChannel internally
     const discoveredCandidates = await base44.asServiceRole.entities.Candidate.filter({
       current_stage: 'Discovered',
     });
@@ -14,13 +16,9 @@ Deno.serve(async (req) => {
       if (c.opted_out || c.outreach_channel) continue;
       const contactPath = (c.contact_path ?? '').toLowerCase();
       let channel = null;
-      if (contactPath.startsWith('email:') || c.email?.trim()) {
-        channel = 'Email';
-      } else if (contactPath.startsWith('linkedin:') || c.linkedin_url?.trim()) {
-        channel = 'LinkedIn';
-      } else if (contactPath.startsWith('twitter:') || c.twitter_handle?.trim()) {
-        channel = 'Twitter DM';
-      }
+      if (contactPath.startsWith('email:') || c.email?.trim()) channel = 'Email';
+      else if (contactPath.startsWith('linkedin:') || c.linkedin_url?.trim()) channel = 'LinkedIn';
+      else if (contactPath.startsWith('twitter:') || c.twitter_handle?.trim()) channel = 'Twitter DM';
       if (channel) {
         await base44.asServiceRole.entities.Candidate.update(c.id, {
           outreach_channel: channel,
@@ -30,28 +28,33 @@ Deno.serve(async (req) => {
       }
     }
 
-    // STEP 1 — Fetch eligible candidates
-    const allCandidates = await base44.asServiceRole.entities.Candidate.filter({
+    // STEP 1 — Find eligible candidates, take next BATCH_SIZE
+    const allDiscovered = await base44.asServiceRole.entities.Candidate.filter({
       current_stage: 'Discovered',
     });
-    const eligible = (allCandidates ?? []).filter((c) =>
+
+    const eligible = (allDiscovered ?? []).filter((c) =>
       c.outreach_channel &&
       (c.outreach_status === 'Not contacted' || !c.outreach_status) &&
       !c.opted_out &&
       !c.outreach_message
     );
 
-    if (eligible.length === 0) {
+    const totalEligible = eligible.length;
+    const batch = eligible.slice(0, BATCH_SIZE);
+
+    if (batch.length === 0) {
       return Response.json({
         success: true,
         message: 'No eligible candidates to process.',
         channels_assigned_step0: channelsAssigned,
         drafts_generated: 0,
         skipped_no_evidence: 0,
+        remaining_in_queue: 0,
       });
     }
 
-    // Load open jobs and companies
+    // Load open jobs + companies once
     const openJobs = await base44.asServiceRole.entities.Job.filter({ status: 'Open' });
     const allCompanies = await base44.asServiceRole.entities.Company.list();
     const companyMap = {};
@@ -69,30 +72,32 @@ Deno.serve(async (req) => {
     let draftsGenerated = 0;
     let skippedNoEvidence = 0;
 
-    for (const candidate of eligible) {
-      // STEP 2 — Evidence gate
+    for (const candidate of batch) {
+      // STEP 2 — Evidence gate (generous)
       let evidenceCard = {};
       try { evidenceCard = JSON.parse(candidate.evidence_card ?? '{}'); } catch (_) {}
 
       const ossContributions = Array.isArray(evidenceCard.oss_contributions) ? evidenceCard.oss_contributions : [];
-      const stars = evidenceCard.stars ?? '';
+      const starsRaw = evidenceCard.stars ?? '';
       const hfModels = evidenceCard.huggingface_models ?? '';
       const languages = Array.isArray(evidenceCard.languages) ? evidenceCard.languages : [];
-      const commits = evidenceCard.commits_90d ?? '';
+      const commitsRaw = evidenceCard.commits_90d ?? '';
       const publicRepos = evidenceCard.public_repos ?? 0;
 
-      const hasSpecificRepo = ossContributions.length > 0 || stars.length > 10;
-      const hasSpecificModel = hfModels.length > 5;
+      const starCount = parseInt(starsRaw.match(/^(\d+)/)?.[1] ?? '0', 10);
+      const commitCount = parseInt(commitsRaw.match(/^(\d+)/)?.[1] ?? '0', 10);
 
-      if (!hasSpecificRepo && !hasSpecificModel) {
+      const hasEvidence = ossContributions.length > 0 || starCount > 0 || commitCount > 5 || hfModels.length > 3;
+
+      if (!hasEvidence) {
         skippedNoEvidence++;
-        results.push({ id: candidate.id, name: candidate.name, status: 'skipped', reason: 'Insufficient evidence — no specific repo or model found' });
+        results.push({ id: candidate.id, name: candidate.name, status: 'skipped', reason: 'No public activity' });
         continue;
       }
 
       const evidenceSummary = [
-        commits ? `Commits (last 90 days): ${commits}` : null,
-        stars ? `Stars: ${stars}` : null,
+        commitsRaw ? `Recent commits: ${commitsRaw}` : null,
+        starsRaw ? `Stars: ${starsRaw}` : null,
         ossContributions.length > 0 ? `OSS contributions: ${ossContributions.join(', ')}` : null,
         languages.length > 0 ? `Primary languages: ${languages.join(', ')}` : null,
         hfModels ? `HuggingFace models: ${hfModels}` : null,
@@ -102,34 +107,28 @@ Deno.serve(async (req) => {
       let specificReference = '';
       if (ossContributions.length > 0) specificReference = ossContributions[0];
       else if (hfModels) specificReference = hfModels;
-      else if (stars) { const m = stars.match(/\(([^:)]+):/); specificReference = m ? m[1] : stars; }
+      else if (starsRaw) { const m = starsRaw.match(/\(([^:)]+):/); specificReference = m ? m[1] : starsRaw.split(' ').slice(0, 5).join(' '); }
+      else if (commitsRaw) specificReference = `${commitsRaw} in the last 90 days`;
 
-      // STEP 3 — AI job matching
+      // STEP 3 — Job matching
       let matchedJob = null;
       let matchReason = '';
 
       if (jobList.length > 0) {
-        const matchPrompt = `You are a technical recruitment assistant. Given a candidate's public work evidence and a list of open jobs, identify the single best job match.
+        const matchPrompt = `Match this candidate to the best open job, or return null if no good fit.
 
-Candidate: ${candidate.name}
-Discovered via: ${candidate.discovered_via ?? 'GitHub'}
-
+Candidate: ${candidate.name} (${candidate.discovered_via ?? 'GitHub'})
 Evidence:
 ${evidenceSummary}
 
-Open jobs:
+Jobs:
 ${jobList.map((j, i) => `${i + 1}. [ID: ${j.id}] ${j.title} at ${j.company} | Stack: ${j.required_stack} | ${j.description}`).join('\n')}
 
-Respond with ONLY a valid JSON object. No markdown. No code blocks. Just raw JSON:
-{"job_id": "<id or null>", "reason": "<one plain English sentence or null>"}
-
-If no job fits, return: {"job_id": null, "reason": null}`;
+Reply with ONLY raw JSON (no markdown):
+{"job_id": "<id or null>", "reason": "<one sentence or null>"}`;
 
         try {
-          const matchText = await base44.integrations.Core.InvokeLLM({
-            prompt: matchPrompt,
-            model: 'gpt_5_mini',
-          });
+          const matchText = await base44.integrations.Core.InvokeLLM({ prompt: matchPrompt, model: 'gpt_5_mini' });
           const cleaned = matchText.replace(/```json|```/g, '').trim();
           const parsed = JSON.parse(cleaned);
           if (parsed.job_id && parsed.job_id !== 'null' && parsed.job_id !== null) {
@@ -139,7 +138,7 @@ If no job fits, return: {"job_id": null, "reason": null}`;
         } catch (_) { matchedJob = null; }
       }
 
-      // STEP 4+5 — Channel-specific message generation
+      // STEP 4+5 — Generate message
       const channel = candidate.outreach_channel;
       const platform = candidate.discovered_via ?? 'GitHub';
       const isEmail = channel === 'Email';
@@ -147,52 +146,39 @@ If no job fits, return: {"job_id": null, "reason": null}`;
       const messageType = matchedJob ? 'personalised' : 'talent_pool';
 
       const messagePrompt = messageType === 'personalised'
-        ? `You are writing a recruitment outreach message on behalf of Agent(cy), an EU-compliant AI recruitment service based in Amsterdam.
-
-Write a ${isEmail ? 'professional email' : isLinkedIn ? 'LinkedIn message' : 'Twitter DM'} to ${candidate.name}.
-
-Rules:
-- Warm, professional tone. Not corporate. Not generic.
-- Do NOT start with "I came across your profile" or "I hope this message finds you well"
-- Reference their specific work: ${specificReference}
-- Mention the role: ${matchedJob.title} at ${matchedJob.company}
-- Use this match reason naturally: ${matchReason}
-- End with: "Would you be open to a quick chat?"
-- ${isEmail ? 'First line must be: Subject: <subject>. Then body. 4 sentences max.' : isLinkedIn ? '3 sentences max. No subject line.' : '2-3 sentences max. No subject line.'}
-- Do NOT add GDPR text or opt-out instructions. Those are added separately.
-- Output only the message. Nothing else.`
-        : `You are writing a recruitment outreach message on behalf of Agent(cy), an EU-compliant AI recruitment service based in Amsterdam.
-
-Write a ${isEmail ? 'professional email' : isLinkedIn ? 'LinkedIn message' : 'Twitter DM'} to ${candidate.name}.
-
-Rules:
-- Warm, professional tone. Not corporate. Not generic.
-- Do NOT start with "I came across your profile" or "I hope this message finds you well"
-- Reference their specific work: ${specificReference}
-- Do NOT mention a specific role. Say we work with AI-native companies building in this space in Amsterdam.
-- End with: "Would you be open to staying in touch?"
-- ${isEmail ? 'First line must be: Subject: <subject>. Then body. 3-4 sentences max.' : isLinkedIn ? '3 sentences max. No subject line.' : '2-3 sentences max. No subject line.'}
-- Do NOT add GDPR text or opt-out instructions. Those are added separately.
-- Output only the message. Nothing else.`;
+        ? `Write a ${isEmail ? 'recruitment email' : isLinkedIn ? 'LinkedIn message' : 'Twitter DM'} from Agent(cy) (AI recruitment, Amsterdam) to ${candidate.name}.
+Warm, direct, human tone. Not corporate.
+Don't open with "I came across your profile" or "I hope this message finds you well."
+Reference their work: ${specificReference}
+Role: ${matchedJob.title} at ${matchedJob.company}
+Why it fits: ${matchReason}
+Close: "Would you be open to a quick chat?"
+${isEmail ? 'Line 1: Subject: <subject>. Then body. Max 4 sentences.' : isLinkedIn ? 'Max 3 sentences. No subject.' : 'Max 2-3 sentences. No subject.'}
+NO GDPR text. Output only the message.`
+        : `Write a ${isEmail ? 'recruitment email' : isLinkedIn ? 'LinkedIn message' : 'Twitter DM'} from Agent(cy) (AI recruitment, Amsterdam) to ${candidate.name}.
+Warm, direct, human tone. Not corporate.
+Don't open with "I came across your profile" or "I hope this message finds you well."
+Reference their work: ${specificReference}
+No specific role — say Agent(cy) connects AI builders with Amsterdam-based AI-native companies.
+Close: "Would you be open to staying in touch?"
+${isEmail ? 'Line 1: Subject: <subject>. Then body. Max 3-4 sentences.' : isLinkedIn ? 'Max 3 sentences. No subject.' : 'Max 2-3 sentences. No subject.'}
+NO GDPR text. Output only the message.`;
 
       let draftMessage = '';
       try {
-        draftMessage = (await base44.integrations.Core.InvokeLLM({
-          prompt: messagePrompt,
-          model: 'gpt_5_mini',
-        })).trim();
+        draftMessage = (await base44.integrations.Core.InvokeLLM({ prompt: messagePrompt, model: 'gpt_5_mini' })).trim();
       } catch (_) {
-        results.push({ id: candidate.id, name: candidate.name, status: 'error', reason: 'LLM message generation failed' });
+        results.push({ id: candidate.id, name: candidate.name, status: 'error', reason: 'LLM failed' });
         continue;
       }
 
       if (!draftMessage) {
-        results.push({ id: candidate.id, name: candidate.name, status: 'error', reason: 'Empty message returned' });
+        results.push({ id: candidate.id, name: candidate.name, status: 'error', reason: 'Empty message' });
         continue;
       }
 
-      // STEP 6 — Append mandatory GDPR footer in code (never by LLM)
-      const gdprFooter = `\n\n---\nAgent(cy) found your profile via publicly available information on ${platform}. We hold: your public profile URL and publicly visible work signals. We process this under legitimate interests to match candidates to relevant roles. You can request deletion or object to processing at any time: privacy@agentcy.io. If you don't respond, your data is deleted after 90 days. Reply REMOVE to be deleted from our system immediately.`;
+      // STEP 6 — Append GDPR footer in code
+      const gdprFooter = `\n\n---\nAgent(cy) found your profile via publicly available information on ${platform}. We hold: your public profile URL and publicly visible work signals. We process this under legitimate interests to match candidates to relevant roles. You can request deletion or object to processing at any time: privacy@agentcy.io. If you don't respond, your data is deleted after 90 days. Reply REMOVE to be deleted immediately.`;
 
       const fullMessage = draftMessage + gdprFooter;
 
@@ -205,11 +191,8 @@ Rules:
 
       draftsGenerated++;
       results.push({
-        id: candidate.id,
-        name: candidate.name,
-        status: 'draft_generated',
-        channel,
-        message_type: messageType,
+        id: candidate.id, name: candidate.name, status: 'draft_generated',
+        channel, message_type: messageType,
         matched_job: matchedJob ? `${matchedJob.title} at ${matchedJob.company}` : null,
         match_reason: matchReason || null,
       });
@@ -218,9 +201,10 @@ Rules:
     return Response.json({
       success: true,
       channels_assigned_step0: channelsAssigned,
-      eligible_candidates: eligible.length,
+      batch_size: batch.length,
       drafts_generated: draftsGenerated,
       skipped_no_evidence: skippedNoEvidence,
+      remaining_in_queue: Math.max(0, totalEligible - batch.length),
       breakdown: results,
     });
 

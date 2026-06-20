@@ -49,7 +49,14 @@ export default function Dashboard() {
     try {
       const res = await base44.functions.invoke("generateOutreachDraft", {});
       const data = res.data;
-      setDraftResult({ type: "success", message: `Done — ${data.drafts_generated} draft${data.drafts_generated !== 1 ? "s" : ""} generated, ${data.skipped_no_evidence ?? 0} skipped (insufficient evidence).` });
+      const generated = data.drafts_generated ?? 0;
+      const skipped = data.skipped_no_evidence ?? 0;
+      const remaining = data.remaining_in_queue ?? 0;
+      let msg = `${generated} draft${generated !== 1 ? "s" : ""} generated`;
+      if (skipped > 0) msg += `, ${skipped} skipped (no evidence)`;
+      if (remaining > 0) msg += ` — ${remaining} remaining in queue. Press again to continue.`;
+      else msg += " — queue complete.";
+      setDraftResult({ type: remaining > 0 ? "warning" : "success", message: msg });
       fetchAll();
     } catch (err) {
       setDraftResult({ type: "error", message: err?.response?.data?.error ?? err?.message ?? "Failed to generate drafts." });
@@ -109,6 +116,8 @@ export default function Dashboard() {
         <div className={`mx-8 mt-4 px-4 py-2.5 rounded-sm font-sans text-xs border ${
           draftResult.type === "success"
             ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+            : draftResult.type === "warning"
+            ? "bg-amber-500/10 border-amber-500/25 text-amber-400"
             : "bg-red-500/10 border-red-500/25 text-red-400"
         }`}>
           {draftResult.message}
