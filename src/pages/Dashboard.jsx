@@ -10,9 +10,10 @@ const STAGES = [
   "Intake Done",
   "Match Packet Ready",
   "Interview Scheduled",
+  "Opted Out",
 ];
 
-const SOURCE_OPTIONS = ["All", "GitHub", "HuggingFace", "Discord", "LinkedIn"];
+const SOURCE_OPTIONS = ["All", "GitHub", "HuggingFace", "Discord", "LinkedIn", "Manual"];
 
 export default function Dashboard() {
   const [candidates, setCandidates] = useState([]);
@@ -21,7 +22,7 @@ export default function Dashboard() {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    base44.entities.Candidate.list("-created_date", 500).then((data) => {
+    base44.entities.Candidate.list("-created_date", 2000).then((data) => {
       setCandidates(Array.isArray(data) ? data : []);
       setLoading(false);
     });
