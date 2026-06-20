@@ -95,7 +95,7 @@ export default function TalkPage() {
     vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
-    vapi.on("call-end", () => { setState(STATES.ENDED); cleanup(); });
+    vapi.on("call-end", () => { setState(STATES.ENDED); cleanup(); setTimeout(() => { window.location.href = "/candidate-dashboard"; }, 2500); });
     vapi.on("error", (e) => {
       console.error("Vapi error:", e);
       setErrorMessage(e?.message || e?.error?.message || JSON.stringify(e) || "Unknown error");
