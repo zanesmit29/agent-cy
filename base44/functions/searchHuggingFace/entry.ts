@@ -4,16 +4,17 @@ const GITHUB_PAT = Deno.env.get('GITHUB_PAT') ?? '';
 const HF_API = 'https://huggingface.co/api';
 const GITHUB_API = 'https://api.github.com';
 
-const KNOWN_ORG_PATTERNS = [
+const KNOWN_ORG_ACCOUNTS = new Set([
   'meta-llama', 'google', 'mistralai', 'huggingface', 'openai', 'microsoft',
   'anthropic', 'stabilityai', 'tiiuae', 'bigscience', 'eleutherai', 'allenai',
   'facebook', 'amazon', 'nvidia', 'cohere', 'ai21labs', 'mosaicml',
   'cerebras', 'together', 'togethercomputer', 'teknium', 'unsloth',
-];
+  'deepseek-ai', 'qwen', 'baichuan-inc', 'internlm', 'thudm',
+  'lmsys', 'openbmb', 'salesforce', 'bigcode', 'sentence-transformers',
+]);
 
-function looksLikeOrg(username) {
-  const lower = username.toLowerCase();
-  return KNOWN_ORG_PATTERNS.includes(lower) || /^[a-z][a-z-]{4,}$/.test(lower);
+function isKnownOrg(username) {
+  return KNOWN_ORG_ACCOUNTS.has(username.toLowerCase());
 }
 
 const ghFetch = (path) =>
@@ -26,49 +27,52 @@ const ghFetch = (path) =>
     },
   });
 
-function extractContactPath(profile) {
+function extractGitHubContactPath(profile) {
   if (profile.email) return `email:${profile.email}`;
   if (profile.blog?.trim()) return `website:${profile.blog.trim()}`;
   if (profile.twitter_username) return `twitter:${profile.twitter_username}`;
   const bio = profile.bio ?? '';
-  const linkedinMatch = String(bio).match(/linkedin\.com\/in\/[\w-]+/i);
+  const linkedinMatch = bio.match(/linkedin\.com\/in\/[\w-]+/i);
   if (linkedinMatch) return `linkedin:https://${linkedinMatch[0]}`;
-  const discordMatch = String(bio).match(/discord[:\s#]+[\w#]{2,37}/i);
+  const discordMatch = bio.match(/discord[:\s#]+[\w#]{2,37}/i);
   if (discordMatch) return `discord:${discordMatch[0]}`;
   return null;
 }
 
 function extractGitHubHandle(hfProfile) {
-  const links = [
+  const candidates = [
     hfProfile.github ?? '',
-    ...(hfProfile.socialLinks ?? []),
+    ...(Array.isArray(hfProfile.socialLinks) ? hfProfile.socialLinks : []),
     hfProfile.website ?? '',
+    hfProfile.description ?? '',
     hfProfile.bio ?? '',
   ];
-  for (const link of links) {
-    const m = String(link).match(/github\.com\/([A-Za-z0-9_-]+)/i);
-    if (m && m[1]) return m[1];
+  for (const s of candidates) {
+    const m = String(s).match(/github\.com\/([A-Za-z0-9_-]+)/i);
+    if (m?.[1] && m[1] !== 'apps') return m[1];
   }
   return null;
 }
 
 async function collectHuggingFaceEvidence(username) {
+  const NULL_RESULT = { is_org: false, contact_path: null, hf_evidence: {}, github_handle: null };
+
   const profileRes = await fetch(`${HF_API}/users/${username}`, {
     headers: { 'User-Agent': 'agentcy-app/1.0' },
   });
-  if (!profileRes.ok) return { contact_path: null, hf_evidence: null, github_handle: null };
-  const hfProfile = await profileRes.json();
+  if (!profileRes.ok) return { ...NULL_RESULT, is_org: true };
 
-  if (hfProfile.type === 'org') return { contact_path: null, hf_evidence: null, github_handle: null };
+  const hfProfile = await profileRes.json();
+  if (hfProfile.type === 'org') return { ...NULL_RESULT, is_org: true };
 
   let contactPath = null;
   if (hfProfile.email) contactPath = `email:${hfProfile.email}`;
   else if (hfProfile.website?.trim()) contactPath = `website:${hfProfile.website.trim()}`;
   else if (hfProfile.twitter) contactPath = `twitter:${hfProfile.twitter}`;
   else {
-    const bioText = hfProfile.description ?? hfProfile.bio ?? '';
-    const linkedinMatch = String(bioText).match(/linkedin\.com\/in\/[\w-]+/i);
-    if (linkedinMatch) contactPath = `linkedin:https://${linkedinMatch[0]}`;
+    const bioText = String(hfProfile.description ?? hfProfile.bio ?? '');
+    const lm = bioText.match(/linkedin\.com\/in\/[\w-]+/i);
+    if (lm) contactPath = `linkedin:https://${lm[0]}`;
   }
 
   const githubHandle = extractGitHubHandle(hfProfile);
@@ -76,21 +80,21 @@ async function collectHuggingFaceEvidence(username) {
   const modelsRes = await fetch(`${HF_API}/models?author=${username}&limit=100`, {
     headers: { 'User-Agent': 'agentcy-app/1.0' },
   });
-  const models = modelsRes.ok ? await modelsRes.json() : [];
-  const modelList = Array.isArray(models) ? models : [];
+  const modelList = modelsRes.ok ? (await modelsRes.json()) : [];
+  const safeModels = Array.isArray(modelList) ? modelList : [];
 
-  const modelCount = modelList.length;
-  const totalDownloads = modelList.reduce((sum, m) => sum + (m.downloads ?? 0), 0);
-  const modelNames = modelList.slice(0, 5).map((m) => m.modelId ?? m.id ?? '').filter(Boolean);
-  const lastPush = modelList
+  const modelCount = safeModels.length;
+  const totalDownloads = safeModels.reduce((s, m) => s + (m.downloads ?? 0), 0);
+  const modelNames = safeModels.slice(0, 5).map((m) => m.modelId ?? m.id ?? '').filter(Boolean);
+  const lastPush = safeModels
     .map((m) => m.lastModified ?? m.updatedAt ?? '')
     .filter(Boolean).sort().reverse()[0] ?? null;
 
   const spacesRes = await fetch(`${HF_API}/spaces?author=${username}&limit=100`, {
     headers: { 'User-Agent': 'agentcy-app/1.0' },
   });
-  const spaces = spacesRes.ok ? await spacesRes.json() : [];
-  const spacesCount = Array.isArray(spaces) ? spaces.length : 0;
+  const spaceList = spacesRes.ok ? (await spacesRes.json()) : [];
+  const spacesCount = Array.isArray(spaceList) ? spaceList.length : 0;
 
   const hfEvidence = {
     huggingface_models: modelCount > 0
@@ -101,7 +105,7 @@ async function collectHuggingFaceEvidence(username) {
     last_push: lastPush,
   };
 
-  return { contact_path: contactPath, hf_evidence: hfEvidence, github_handle: githubHandle };
+  return { is_org: false, contact_path: contactPath, hf_evidence: hfEvidence, github_handle: githubHandle };
 }
 
 const RECENT_KEYWORDS = ['llm', 'rag', 'fine-tuning', 'langchain', 'weaviate', 'embedding', 'agent'];
@@ -117,8 +121,8 @@ async function searchByRecent() {
       const models = await res.json();
       if (!Array.isArray(models)) continue;
       for (const m of models) {
-        const author = m.author ?? m.modelId?.split('/')?.[0];
-        if (author && !looksLikeOrg(author)) usernames.add(author);
+        const author = m.author ?? m.modelId?.split('/')?.[0] ?? '';
+        if (author && !isKnownOrg(author)) usernames.add(author);
       }
     } catch (_) {}
   }
@@ -135,8 +139,8 @@ async function searchByRelevance() {
       const models = await res.json();
       if (!Array.isArray(models)) continue;
       for (const m of models) {
-        const author = m.author ?? m.modelId?.split('/')?.[0];
-        if (author && !looksLikeOrg(author)) usernames.add(author);
+        const author = m.author ?? m.modelId?.split('/')?.[0] ?? '';
+        if (author && !isKnownOrg(author)) usernames.add(author);
       }
     } catch (_) {}
   }
@@ -173,9 +177,10 @@ Deno.serve(async (req) => {
 
     for (const username of newUsernames) {
       try {
-        const { contact_path, hf_evidence, github_handle } = await collectHuggingFaceEvidence(username);
+        const { is_org, contact_path, hf_evidence, github_handle } =
+          await collectHuggingFaceEvidence(username);
 
-        if (!hf_evidence) { skippedOrg++; continue; }
+        if (is_org) { skippedOrg++; continue; }
 
         let finalContactPath = contact_path;
         let githubEvidence = null;
@@ -187,7 +192,7 @@ Deno.serve(async (req) => {
           const ghProfileRes = await ghFetch(`/users/${github_handle}`);
           if (ghProfileRes.ok) {
             const ghProfile = await ghProfileRes.json();
-            if (!finalContactPath) finalContactPath = extractContactPath(ghProfile);
+            if (!finalContactPath) finalContactPath = extractGitHubContactPath(ghProfile);
 
             if ((ghProfile.followers ?? 0) <= 500) {
               const reposRes = await ghFetch(`/users/${github_handle}/repos?per_page=50&sort=pushed`);
@@ -195,8 +200,11 @@ Deno.serve(async (req) => {
               const ownRepos = Array.isArray(repos) ? repos.filter((r) => !r.fork) : [];
               const totalStars = ownRepos.reduce((s, r) => s + (r.stargazers_count ?? 0), 0);
               const langMap = {};
-              for (const r of ownRepos) { if (r.language) langMap[r.language] = (langMap[r.language] ?? 0) + 1; }
-              const languages = Object.entries(langMap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([l]) => l);
+              for (const r of ownRepos) {
+                if (r.language) langMap[r.language] = (langMap[r.language] ?? 0) + 1;
+              }
+              const languages = Object.entries(langMap)
+                .sort((a, b) => b[1] - a[1]).slice(0, 5).map(([l]) => l);
               githubEvidence = {
                 stars: `${totalStars} stars across ${ownRepos.length} repos`,
                 languages,
