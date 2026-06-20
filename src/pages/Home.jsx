@@ -16,12 +16,12 @@ export default function Home() {
       {/* Nav */}
       <header className="px-8 py-6 flex items-center justify-between border-b border-white/10">
         <span className="font-heading text-xl tracking-tight"><span className="text-white [font-family:'EB_Garamond',_Garamond,_Georgia,_serif] font-normal">Agent</span><span className="text-[#dba12c] [font-family:'EB_Garamond',_Garamond,_Georgia,_serif] font-normal">(cy)</span></span>
-        <a
-          href="/login"
-          className="font-sans text-sm text-white/40 hover:text-white/80 transition-colors hidden">
-          
-          Recruiter login →
-        </a>
+        
+
+
+
+
+        
       </header>
 
       {/* Hero */}
