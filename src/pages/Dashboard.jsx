@@ -47,6 +47,7 @@ export default function Dashboard() {
     setGeneratingDrafts(true);
     setDraftResult(null);
     try {
+      await base44.functions.invoke("selectOutreachChannel", {});
       const res = await base44.functions.invoke("generateOutreachDraft", {});
       const data = res.data;
       const generated = data.drafts_generated ?? 0;
