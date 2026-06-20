@@ -13,6 +13,7 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
 import Login from './pages/Login';
+import Talk from './pages/Talk';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -32,7 +33,7 @@ const AuthenticatedApp = () => {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
       // Allow public routes to render without login
-      const publicPaths = ['/', '/login'];
+      const publicPaths = ['/', '/login', '/talk'];
       if (!publicPaths.includes(window.location.pathname)) {
         navigateToLogin();
         return null;
@@ -45,6 +46,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/talk" element={<Talk />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/jobs" element={<Jobs />} />
