@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
+import { base44 } from "@/api/base44Client";
 import Vapi from "@vapi-ai/web";
 
-const VAPI_PUBLIC_KEY = "753f3541-f459-4c9e-b87e-63b5b9e2d93e";
 const SQUAD_ID = "c767d939-3822-495c-bbaf-f7c880b2d093";
 
 const STATES = { IDLE: "idle", CONNECTING: "connecting", LIVE: "live", ENDED: "ended", ERROR: "error" };
 
 export default function TalkPage() {
   const [state, setState] = useState(STATES.IDLE);
+  const [vapiPublicKey, setVapiPublicKey] = useState(null);
   const [agentSpeaking, setAgentSpeaking] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const vapiRef = useRef(null);
@@ -17,6 +18,16 @@ export default function TalkPage() {
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const streamRef = useRef(null);
+
+  useEffect(() => {
+    base44.functions.invoke("getVapiPublicKey", {}).then((res) => {
+      setVapiPublicKey(res.data.publicKey);
+    }).catch((e) => {
+      console.error("Failed to fetch Vapi key:", e);
+      setErrorMessage("Failed to load Vapi configuration");
+      setVapiPublicKey(null);
+    });
+  }, []);
 
   useEffect(() => {
     let frame;
@@ -82,7 +93,7 @@ export default function TalkPage() {
 
   const initVapi = () => {
     if (vapiRef.current) return;
-    const vapi = new Vapi(VAPI_PUBLIC_KEY);
+    const vapi = new Vapi(vapiPublicKey);
     vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
@@ -154,10 +165,10 @@ export default function TalkPage() {
       )}
       {state === STATES.CONNECTING && <div style={{ marginBottom: "48px" }} />}
       {(state === STATES.IDLE || state === STATES.ERROR) && (
-        <button onClick={handleStart}
-          style={{ background: "transparent", color: "#f0ebe3", border: "1px solid #f0ebe3", borderRadius: "100px", padding: "15px 40px", fontSize: "15px", cursor: "pointer", fontFamily: "-apple-system, sans-serif", transition: "border-color 0.2s, color 0.2s" }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = amber; e.currentTarget.style.color = amber; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "#f0ebe3"; e.currentTarget.style.color = "#f0ebe3"; }}>
+        <button onClick={handleStart} disabled={!vapiPublicKey}
+          style={{ background: "transparent", color: "#f0ebe3", border: `1px solid ${vapiPublicKey ? "#f0ebe3" : dark}`, borderRadius: "100px", padding: "15px 40px", fontSize: "15px", cursor: vapiPublicKey ? "pointer" : "not-allowed", opacity: vapiPublicKey ? 1 : 0.4, fontFamily: "-apple-system, sans-serif", transition: "border-color 0.2s, color 0.2s" }}
+          onMouseEnter={e => { if(vapiPublicKey){ e.currentTarget.style.borderColor = amber; e.currentTarget.style.color = amber; }}}
+          onMouseLeave={e => { if(vapiPublicKey){ e.currentTarget.style.borderColor = "#f0ebe3"; e.currentTarget.style.color = "#f0ebe3"; }}}>
           Start conversation →
         </button>
       )}
