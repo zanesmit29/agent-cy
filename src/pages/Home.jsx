@@ -1,4 +1,16 @@
+import { base44 } from "@/api/base44Client";
+import { Button } from "@/components/ui/button";
+import GoogleIcon from "@/components/GoogleIcon";
+
 export default function Home() {
+  const handleRecruiterLogin = () => {
+    base44.auth.loginWithProvider("google", "/dashboard");
+  };
+
+  const handleCandidateLogin = () => {
+    base44.auth.loginWithProvider("google", "/talk");
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0e13] flex flex-col text-white">
       {/* Nav */}
@@ -39,10 +51,36 @@ export default function Home() {
 
         
 
-        <div className="flex flex-col items-center gap-4">
-          
+        {/* Login Section */}
+        <div className="w-full max-w-xl mx-auto flex items-stretch gap-0 border border-white/10 rounded-sm overflow-hidden mb-6">
+          {/* Recruiter Login */}
+          <div className="flex-1 flex flex-col items-center px-6 py-8">
+            <p className="font-sans text-xs text-white/40 uppercase tracking-wider mb-4">Recruiter Login</p>
+            <Button
+              variant="outline"
+              className="w-full h-12 text-sm font-sans font-medium bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white rounded-sm"
+              onClick={handleRecruiterLogin}
+            >
+              <GoogleIcon className="w-5 h-5 mr-2" />
+              Continue with Google
+            </Button>
+          </div>
 
-          
+          {/* Divider */}
+          <div className="w-px bg-white/10 flex-shrink-0" />
+
+          {/* Candidate Login */}
+          <div className="flex-1 flex flex-col items-center px-6 py-8">
+            <p className="font-sans text-xs text-white/40 uppercase tracking-wider mb-4">Candidate Login</p>
+            <Button
+              variant="outline"
+              className="w-full h-12 text-sm font-sans font-medium bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white rounded-sm"
+              onClick={handleCandidateLogin}
+            >
+              <GoogleIcon className="w-5 h-5 mr-2" />
+              Continue with Google
+            </Button>
+          </div>
         </div>
       </main>
 
