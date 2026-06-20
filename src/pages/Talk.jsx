@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import Vapi from "@vapi-ai/web";
 
 const SQUAD_ID = "c767d939-3822-495c-bbaf-f7c880b2d093";
 
@@ -14,7 +15,6 @@ const STATES = {
 export default function TalkPage() {
   const [state, setState] = useState(STATES.IDLE);
   const [agentSpeaking, setAgentSpeaking] = useState(false);
-  const [vapiReady, setVapiReady] = useState(false);
   const [vapiPublicKey, setVapiPublicKey] = useState(null);
   const vapiRef = useRef(null);
   const canvasRef = useRef(null);
@@ -30,18 +30,6 @@ export default function TalkPage() {
     }).catch(() => {
       setState(STATES.ERROR);
     });
-  }, []);
-
-  // Load Vapi SDK dynamically via useEffect (correct React pattern — no <script> tag)
-  useEffect(() => {
-    if (window.Vapi) { setVapiReady(true); return; }
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/vapi.js";
-    script.async = true;
-    script.onload = () => setVapiReady(true);
-    script.onerror = () => console.error("Failed to load Vapi SDK");
-    document.head.appendChild(script);
-    return () => { try { document.head.removeChild(script); } catch(_) {} };
   }, []);
 
   // Waveform animation
@@ -126,7 +114,7 @@ export default function TalkPage() {
 
   const initVapi = () => {
     if (vapiRef.current || !vapiPublicKey) return;
-    const vapi = new window.Vapi(vapiPublicKey);
+    const vapi = new Vapi(vapiPublicKey);
     vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
@@ -142,7 +130,6 @@ export default function TalkPage() {
   };
 
   const handleStart = () => {
-    if (!vapiReady) return;
     initVapi();
     setState(STATES.CONNECTING);
     vapiRef.current.start({ squadId: SQUAD_ID });
@@ -169,10 +156,10 @@ export default function TalkPage() {
       {state === STATES.ENDED && <p style={{ color: "#888", fontSize: "16px", maxWidth: "400px", textAlign: "center", margin: "0 0 44px", lineHeight: 1.6 }}>Thanks for the conversation.</p>}
       {state === STATES.ERROR && <p style={{ color: "#ef4444", fontSize: "15px", margin: "0 0 44px", textAlign: "center" }}>Something went wrong. Try again or reach us at hello@agentcy.io</p>}
       {(state === STATES.IDLE || state === STATES.ERROR) && (
-        <button onClick={handleStart} disabled={!vapiReady}
-          style={{ background: "#6366f1", color: "#fff", border: "none", borderRadius: "100px", padding: "16px 40px", fontSize: "16px", fontWeight: "600", cursor: vapiReady ? "pointer" : "not-allowed", opacity: vapiReady ? 1 : 0.5, letterSpacing: "-0.2px", transition: "background 0.2s" }}
-          onMouseEnter={e => { if (vapiReady) e.currentTarget.style.background = "#4f46e5"; }}
-          onMouseLeave={e => { if (vapiReady) e.currentTarget.style.background = "#6366f1"; }}>
+        <button onClick={handleStart}
+          style={{ background: "#6366f1", color: "#fff", border: "none", borderRadius: "100px", padding: "16px 40px", fontSize: "16px", fontWeight: "600", cursor: "pointer", letterSpacing: "-0.2px", transition: "background 0.2s" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "#4f46e5"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "#6366f1"; }}>
           Start talking
         </button>
       )}
