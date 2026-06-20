@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
       if (c.opted_out || c.outreach_channel) continue;
       const contactPath = (c.contact_path ?? '').toLowerCase();
       let channel = null;
-      if (contactPath.startsWith('email:') || (c.email?.trim())) {
+      if (contactPath.startsWith('email:') || c.email?.trim()) {
         channel = 'Email';
       } else if (contactPath.startsWith('linkedin:') || c.linkedin_url?.trim()) {
         channel = 'LinkedIn';
@@ -34,7 +34,6 @@ Deno.serve(async (req) => {
     const allCandidates = await base44.asServiceRole.entities.Candidate.filter({
       current_stage: 'Discovered',
     });
-
     const eligible = (allCandidates ?? []).filter((c) =>
       c.outreach_channel &&
       (c.outreach_status === 'Not contacted' || !c.outreach_status) &&
@@ -121,15 +120,19 @@ ${evidenceSummary}
 Open jobs:
 ${jobList.map((j, i) => `${i + 1}. [ID: ${j.id}] ${j.title} at ${j.company} | Stack: ${j.required_stack} | ${j.description}`).join('\n')}
 
-Respond with ONLY a JSON object in this exact format (no markdown, no explanation):
-{"job_id": "<id or null>", "reason": "<one plain English sentence explaining why this job fits, or null if no match>"}
+Respond with ONLY a valid JSON object. No markdown. No code blocks. Just raw JSON:
+{"job_id": "<id or null>", "reason": "<one plain English sentence or null>"}
 
-If no job is a reasonable fit, use null for both fields.`;
+If no job fits, return: {"job_id": null, "reason": null}`;
 
         try {
-          const matchResponse = await base44.functions.llm({ prompt: matchPrompt, model: 'gpt-4o-mini', temperature: 0.3 });
-          const parsed = JSON.parse(matchResponse?.text ?? '{}');
-          if (parsed.job_id && parsed.job_id !== 'null') {
+          const matchText = await base44.integrations.Core.InvokeLLM({
+            prompt: matchPrompt,
+            model: 'gpt_5_mini',
+          });
+          const cleaned = matchText.replace(/```json|```/g, '').trim();
+          const parsed = JSON.parse(cleaned);
+          if (parsed.job_id && parsed.job_id !== 'null' && parsed.job_id !== null) {
             matchedJob = jobList.find((j) => j.id === parsed.job_id) ?? null;
             matchReason = parsed.reason ?? '';
           }
@@ -154,10 +157,10 @@ Rules:
 - Reference their specific work: ${specificReference}
 - Mention the role: ${matchedJob.title} at ${matchedJob.company}
 - Use this match reason naturally: ${matchReason}
-- End with a soft call to action: "Would you be open to a quick chat?"
-- ${isEmail ? '4 sentences max. Include a subject line on the first line as: Subject: <subject>' : isLinkedIn ? '3 sentences max. No subject line.' : '2-3 sentences max. Very concise.'}
-- Do NOT include any legal text, GDPR footers, or opt-out instructions — those are added separately.
-- Output only the message text, nothing else.`
+- End with: "Would you be open to a quick chat?"
+- ${isEmail ? 'First line must be: Subject: <subject>. Then body. 4 sentences max.' : isLinkedIn ? '3 sentences max. No subject line.' : '2-3 sentences max. No subject line.'}
+- Do NOT add GDPR text or opt-out instructions. Those are added separately.
+- Output only the message. Nothing else.`
         : `You are writing a recruitment outreach message on behalf of Agent(cy), an EU-compliant AI recruitment service based in Amsterdam.
 
 Write a ${isEmail ? 'professional email' : isLinkedIn ? 'LinkedIn message' : 'Twitter DM'} to ${candidate.name}.
@@ -167,17 +170,19 @@ Rules:
 - Do NOT start with "I came across your profile" or "I hope this message finds you well"
 - Reference their specific work: ${specificReference}
 - Do NOT mention a specific role. Say we work with AI-native companies building in this space in Amsterdam.
-- End with a soft invitation: "Would you be open to staying in touch?"
-- ${isEmail ? '3-4 sentences max. Include a subject line on the first line as: Subject: <subject>' : isLinkedIn ? '3 sentences max. No subject line.' : '2-3 sentences max. Very concise.'}
-- Do NOT include any legal text, GDPR footers, or opt-out instructions — those are added separately.
-- Output only the message text, nothing else.`;
+- End with: "Would you be open to staying in touch?"
+- ${isEmail ? 'First line must be: Subject: <subject>. Then body. 3-4 sentences max.' : isLinkedIn ? '3 sentences max. No subject line.' : '2-3 sentences max. No subject line.'}
+- Do NOT add GDPR text or opt-out instructions. Those are added separately.
+- Output only the message. Nothing else.`;
 
       let draftMessage = '';
       try {
-        const msgResponse = await base44.functions.llm({ prompt: messagePrompt, model: 'gpt-4o-mini', temperature: 0.7 });
-        draftMessage = (msgResponse?.text ?? '').trim();
+        draftMessage = (await base44.integrations.Core.InvokeLLM({
+          prompt: messagePrompt,
+          model: 'gpt_5_mini',
+        })).trim();
       } catch (_) {
-        results.push({ id: candidate.id, name: candidate.name, status: 'error', reason: 'LLM call failed' });
+        results.push({ id: candidate.id, name: candidate.name, status: 'error', reason: 'LLM message generation failed' });
         continue;
       }
 
@@ -191,7 +196,7 @@ Rules:
 
       const fullMessage = draftMessage + gdprFooter;
 
-      // STEP 7 — Save draft and advance stage to Pending Review
+      // STEP 7 — Save and advance to Pending Review
       await base44.asServiceRole.entities.Candidate.update(candidate.id, {
         outreach_message: fullMessage,
         outreach_status: 'Draft ready',
