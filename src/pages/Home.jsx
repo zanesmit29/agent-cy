@@ -1,5 +1,3 @@
-import { ArrowRight } from "lucide-react";
-
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#0a0e13] flex flex-col text-white">
@@ -30,15 +28,8 @@ export default function Home() {
         </p>
 
         <div className="flex flex-col items-center gap-4">
-          <button
-            className="group inline-flex items-center gap-3 bg-white text-[#0a0e13] font-sans text-sm font-medium px-8 py-4 hover:bg-white/90 transition-colors tracking-wide rounded-full"
-            style={{ letterSpacing: "0.04em" }}
-          >
-            Talk to our AI recruiter
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </button>
-          <p className="font-sans text-xs text-white/35 max-w-xs text-center leading-relaxed">
-            You'll speak with an AI assistant. A human recruiter reviews every profile.
+          <p className="font-sans text-base text-white/50 max-w-xs text-center leading-relaxed">
+            A human recruiter reviews every profile we discover.
           </p>
         </div>
       </main>
