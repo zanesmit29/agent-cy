@@ -100,7 +100,8 @@ export default function TalkPage() {
     vapi.on("call-end", () => { setState(STATES.ENDED); cleanup(); });
     vapi.on("error", (e) => { 
       console.error("Vapi error:", e); 
-      setErrorMessage(e?.message || e?.error?.message || JSON.stringify(e) || "Unknown error"); 
+      const raw = e?.message ?? e?.error?.message ?? e;
+      setErrorMessage(typeof raw === "string" ? raw : JSON.stringify(raw)); 
       setState(STATES.ERROR); 
       cleanup(); 
     });
