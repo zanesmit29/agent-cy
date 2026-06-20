@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { base44 } from "@/api/base44Client";
 
-const VAPI_PUBLIC_KEY = "753f3541-f459-4c9e-b87e-63b5b9e2d93e";
 const SQUAD_ID = "c767d939-3822-495c-bbaf-f7c880b2d093";
 
 const STATES = {
@@ -15,12 +15,22 @@ export default function TalkPage() {
   const [state, setState] = useState(STATES.IDLE);
   const [agentSpeaking, setAgentSpeaking] = useState(false);
   const [vapiReady, setVapiReady] = useState(false);
+  const [vapiPublicKey, setVapiPublicKey] = useState(null);
   const vapiRef = useRef(null);
   const canvasRef = useRef(null);
   const animFrameRef = useRef(null);
   const analyserRef = useRef(null);
   const audioContextRef = useRef(null);
   const streamRef = useRef(null);
+
+  // Fetch Vapi public key from backend
+  useEffect(() => {
+    base44.functions.invoke("getVapiPublicKey", {}).then((res) => {
+      setVapiPublicKey(res.data.publicKey);
+    }).catch(() => {
+      setState(STATES.ERROR);
+    });
+  }, []);
 
   // Load Vapi SDK dynamically via useEffect (correct React pattern — no <script> tag)
   useEffect(() => {
@@ -115,8 +125,8 @@ export default function TalkPage() {
   };
 
   const initVapi = () => {
-    if (vapiRef.current) return;
-    const vapi = new window.Vapi(VAPI_PUBLIC_KEY);
+    if (vapiRef.current || !vapiPublicKey) return;
+    const vapi = new window.Vapi(vapiPublicKey);
     vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
