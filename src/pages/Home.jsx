@@ -18,7 +18,7 @@ export default function Home() {
 
         
 
-        <h1 className="font-heading text-white text-5xl md:text-6xl lg:text-7xl leading-[1.05] font-medium max-w-3xl mt-10 mb-10">We connect engineers to the right roles. Our AI does the groundwork.
+        <h1 className="font-heading text-white text-5xl md:text-6xl lg:text-7xl leading-[1.05] font-medium max-w-3xl mb-12 mt-12">We connect engineers to the right roles. Our AI does the groundwork.
 
 
         </h1>
@@ -45,7 +45,7 @@ export default function Home() {
       </main>
 
       {/* Footer — GDPR Art. 13/14 */}
-      <footer className="px-8 py-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <footer className="px-8 py-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 my-1">
         <p className="font-sans text-xs text-white/35 text-center sm:text-left max-w-xl leading-relaxed">
           Agent(cy) uses AI to discover candidates and prepare evidence. All hiring decisions are made by human recruiters. Data controller: Agent(cy) —{" "}
           <a href="mailto:privacy@agentcy.io" className="underline hover:text-white/60 transition-colors">
