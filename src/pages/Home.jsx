@@ -13,12 +13,12 @@ export default function Home() {
       </header>
 
       {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center text-center px-6">
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 my-1">
         
 
         
 
-        <h1 className="font-heading text-white text-5xl md:text-6xl lg:text-7xl leading-[1.05] mb-6 font-medium max-w-3xl mt-1">We connect engineers to the right roles. Our AI does the groundwork.
+        <h1 className="font-heading text-white text-5xl md:text-6xl lg:text-7xl leading-[1.05] mb-6 font-medium max-w-3xl mt-10">We connect engineers to the right roles. Our AI does the groundwork.
 
 
         </h1>
