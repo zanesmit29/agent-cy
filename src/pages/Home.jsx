@@ -3,11 +3,11 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0e13] flex flex-col text-white">
       {/* Nav */}
       <header className="px-8 py-6 flex items-center justify-between border-b border-white/10">
-        <span className="font-heading text-xl tracking-tight"><span className="text-white">Agent</span><span className="text-[#dba12c]">(cy)</span></span>
+        <span className="font-heading text-xl tracking-tight"><span className="text-white [font-family:'EB_Garamond',_Garamond,_Georgia,_serif] font-normal">Agent</span><span className="text-[#dba12c] [font-family:'EB_Garamond',_Garamond,_Georgia,_serif] font-normal">(cy)</span></span>
         <a
           href="/login"
-          className="font-sans text-sm text-white/40 hover:text-white/80 transition-colors"
-        >
+          className="font-sans text-sm text-white/40 hover:text-white/80 transition-colors">
+          
           Recruiter login →
         </a>
       </header>
@@ -44,11 +44,11 @@ export default function Home() {
         </p>
         <a
           href="mailto:privacy@agentcy.io"
-          className="font-sans text-xs text-white/35 underline hover:text-white/60 transition-colors whitespace-nowrap"
-        >
+          className="font-sans text-xs text-white/35 underline hover:text-white/60 transition-colors whitespace-nowrap">
+          
           Remove my data
         </a>
       </footer>
-    </div>
-  );
+    </div>);
+
 }
