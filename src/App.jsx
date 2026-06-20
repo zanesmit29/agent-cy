@@ -14,6 +14,7 @@ import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
 import Login from './pages/Login';
 import Talk from './pages/Talk';
+import CandidateDashboard from './pages/CandidateDashboard';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -50,6 +51,7 @@ const AuthenticatedApp = () => {
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/jobs" element={<Jobs />} />
+        <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
