@@ -11,6 +11,7 @@ import { Navigate } from 'react-router-dom';
 // Add page imports here
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
+import Jobs from './pages/Jobs';
 import Login from './pages/Login';
 
 const AuthenticatedApp = () => {
@@ -43,6 +44,7 @@ const AuthenticatedApp = () => {
       <Route path="/login" element={<Login />} />
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/jobs" element={<Jobs />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
