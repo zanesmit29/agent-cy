@@ -11,6 +11,7 @@ const TARGET_CHANNELS = [
   { id: '861966823054639134',  label: 'DevPost' },
   { id: '1101210829807956100', label: 'Kaggle' },
   { id: '1303811506080841758', label: 'Base44' },
+  { id: '1508812795096076288', label: 'Megathon Amsterdam' },
 ];
 
 const discordFetch = (path) =>
