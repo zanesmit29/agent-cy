@@ -111,7 +111,7 @@ export default function TalkPage() {
   const handleStart = () => {
     initVapi();
     setState(STATES.CONNECTING);
-    vapiRef.current.start({ squadId: SQUAD_ID });
+    vapiRef.current.start(SQUAD_ID);
   };
 
   const handleEnd = () => vapiRef.current?.stop();
