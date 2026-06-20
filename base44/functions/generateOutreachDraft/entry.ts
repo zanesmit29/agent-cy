@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     const jobList = (openJobs ?? []).map((j) => ({
       id: j.id,
       title: j.title,
-      company: companyMap[j.company] ?? 'Unknown Company',
+      company: companyMap[j.company_id] ?? 'Unknown Company',
       required_stack: j.required_stack ?? '',
       description: j.conversational_description ?? j.description ?? '',
     }));
