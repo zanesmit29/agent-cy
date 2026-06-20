@@ -14,7 +14,7 @@ export default function Home() {
 
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-        <p className="font-sans text-xs tracking-[0.2em] uppercase text-[#dba12c] mb-10">
+        <p className="font-sans text-xs tracking-[0.2em] uppercase text-[#dba12c] mb-10 hidden">
           AI-Native Engineering Recruitment
         </p>
 
@@ -29,16 +29,16 @@ export default function Home() {
             style={{ aspectRatio: "16/9", display: "block", border: "none" }}
             src="https://www.youtube.com/embed/ekJhgic6ll4?modestbranding=1&rel=0&showinfo=0"
             title="Agent(cy) intro"
-            allowFullScreen
-          />
+            allowFullScreen />
+          
         </div>
 
-        <p className="font-sans text-white/50 text-base md:text-lg leading-relaxed mb-14 max-w-lg">
+        <p className="font-sans text-white/50 text-base md:text-lg leading-relaxed mb-14 max-w-lg hidden">
           We look at real work, not CVs. If we reached out, a recruiter has reviewed your profile and wants to learn more.
         </p>
 
         <div className="flex flex-col items-center gap-4">
-          <p className="font-sans text-base text-white/50 max-w-xs text-center leading-relaxed">
+          <p className="font-sans text-base text-white/50 max-w-xs text-center leading-relaxed hidden">
             A human recruiter reviews every profile we discover.
           </p>
         </div>
