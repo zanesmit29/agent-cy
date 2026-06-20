@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Vapi from "@vapi-ai/web";
 import { base44 } from "@/api/base44Client";
 
@@ -7,6 +8,7 @@ const SQUAD_ID = "c767d939-3822-495c-bbaf-f7c880b2d093";
 const STATES = { IDLE: "idle", CONNECTING: "connecting", LIVE: "live", ENDED: "ended", ERROR: "error" };
 
 export default function TalkPage() {
+  const navigate = useNavigate();
   const [state, setState] = useState(STATES.IDLE);
   const [agentSpeaking, setAgentSpeaking] = useState(false);
   const [vapiReady, setVapiReady] = useState(false);
@@ -95,7 +97,7 @@ export default function TalkPage() {
     vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
-    vapi.on("call-end", () => { setState(STATES.ENDED); cleanup(); setTimeout(() => { window.location.href = "/candidate-dashboard"; }, 2500); });
+    vapi.on("call-end", () => { setState(STATES.ENDED); cleanup(); setTimeout(() => { navigate("/candidate-dashboard"); }, 2500); });
     vapi.on("error", (e) => {
       console.error("Vapi error:", e);
       setErrorMessage(e?.message || e?.error?.message || JSON.stringify(e) || "Unknown error");
