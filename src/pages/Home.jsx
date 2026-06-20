@@ -23,17 +23,14 @@ export default function Home() {
           <em className="text-white/55">Our AI does the groundwork.</em>
         </h1>
 
-        <div className="w-full max-w-[800px] mb-10">
-          <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-            <iframe
-              className="absolute inset-0 w-full h-full rounded-lg"
-              src="https://www.youtube.com/embed/ekJhgic6ll4"
-              title="Agent(cy) intro"
-              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              style={{ border: "none" }}
-            />
-          </div>
+        <div className="w-full max-w-[800px] mb-10 mx-auto" style={{ borderRadius: "8px", overflow: "hidden" }}>
+          <iframe
+            width="100%"
+            style={{ aspectRatio: "16/9", display: "block", border: "none" }}
+            src="https://www.youtube.com/embed/ekJhgic6ll4?modestbranding=1&rel=0&showinfo=0"
+            title="Agent(cy) intro"
+            allowFullScreen
+          />
         </div>
 
         <p className="font-sans text-white/50 text-base md:text-lg leading-relaxed mb-14 max-w-lg">
