@@ -21,9 +21,9 @@ export default function TalkPage() {
   const streamRef = useRef(null);
 
   useEffect(() => {
-    base44.functions.invoke("getVapiPublicKey", {})
-      .then((res) => { apiKeyRef.current = res.data.publicKey; setVapiReady(true); })
-      .catch(() => { setErrorMessage("Failed to load Vapi configuration"); setState(STATES.ERROR); });
+    base44.functions.invoke("getVapiPublicKey", {}).
+    then((res) => {apiKeyRef.current = res.data.publicKey;setVapiReady(true);}).
+    catch(() => {setErrorMessage("Failed to load Vapi configuration");setState(STATES.ERROR);});
   }, []);
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function TalkPage() {
         orb.style.transform = `scale(${0.9 + Math.sin(t * 1.2) * 0.1})`;
         orb.style.opacity = "0.7";
         orb.style.boxShadow = "0 0 60px 12px rgba(201,169,110,0.25)";
-        if (ring1) { ring1.style.opacity = String(0.3 + Math.sin(t) * 0.2); ring1.style.transform = `scale(${1.2 + Math.sin(t * 0.8) * 0.15})`; }
+        if (ring1) {ring1.style.opacity = String(0.3 + Math.sin(t) * 0.2);ring1.style.transform = `scale(${1.2 + Math.sin(t * 0.8) * 0.15})`;}
         if (ring2) ring2.style.opacity = "0";
       } else if (state === STATES.LIVE) {
         const fast = agentSpeaking;
@@ -54,8 +54,8 @@ export default function TalkPage() {
         orb.style.opacity = fast ? "1" : "0.75";
         orb.style.boxShadow = fast ? "0 0 80px 20px rgba(201,169,110,0.45)" : "0 0 50px 10px rgba(201,169,110,0.25)";
         const speed = fast ? 1.5 : 0.8;
-        if (ring1) { const p = (t * speed) % 1; ring1.style.transform = `scale(${1.3 + p * 0.8})`; ring1.style.opacity = String(Math.max(0, 0.5 - p * 0.5)); }
-        if (ring2) { const p = (t * speed + 0.5) % 1; ring2.style.transform = `scale(${1.3 + p * 0.8})`; ring2.style.opacity = String(Math.max(0, 0.5 - p * 0.5)); }
+        if (ring1) {const p = t * speed % 1;ring1.style.transform = `scale(${1.3 + p * 0.8})`;ring1.style.opacity = String(Math.max(0, 0.5 - p * 0.5));}
+        if (ring2) {const p = (t * speed + 0.5) % 1;ring2.style.transform = `scale(${1.3 + p * 0.8})`;ring2.style.opacity = String(Math.max(0, 0.5 - p * 0.5));}
       } else {
         orb.style.transform = "scale(0.7)";
         orb.style.opacity = "0.2";
@@ -79,22 +79,22 @@ export default function TalkPage() {
       analyser.fftSize = 256;
       source.connect(analyser);
       analyserRef.current = analyser;
-    } catch(e) { console.warn("Mic:", e); }
+    } catch (e) {console.warn("Mic:", e);}
   };
 
   const cleanup = () => {
-    if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
-    if (audioContextRef.current) { audioContextRef.current.close(); audioContextRef.current = null; }
+    if (streamRef.current) {streamRef.current.getTracks().forEach((t) => t.stop());streamRef.current = null;}
+    if (audioContextRef.current) {audioContextRef.current.close();audioContextRef.current = null;}
     analyserRef.current = null;
   };
 
   const initVapi = () => {
     if (vapiRef.current) return;
     const vapi = new Vapi(apiKeyRef.current);
-    vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
+    vapi.on("call-start", async () => {setState(STATES.LIVE);await startMicAnalyser();});
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
-    vapi.on("call-end", () => { setState(STATES.ENDED); cleanup(); });
+    vapi.on("call-end", () => {setState(STATES.ENDED);cleanup();});
     vapi.on("error", (e) => {
       console.error("Vapi error:", e);
       setErrorMessage(e?.message || e?.error?.message || JSON.stringify(e) || "Unknown error");
@@ -112,7 +112,7 @@ export default function TalkPage() {
   };
 
   const handleEnd = () => vapiRef.current?.stop();
-  const handleRestart = () => { vapiRef.current = null; setErrorMessage(""); setState(STATES.IDLE); };
+  const handleRestart = () => {vapiRef.current = null;setErrorMessage("");setState(STATES.IDLE);};
 
   const amber = "#c9a96e";
   const grey = "#a09a8e";
@@ -121,7 +121,7 @@ export default function TalkPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#13120f", color: "#f0ebe3", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", fontFamily: "Georgia, 'Times New Roman', serif", position: "relative" }}>
       <div style={{ position: "absolute", top: "28px", left: "32px", fontSize: "17px", fontWeight: "700", letterSpacing: "-0.2px" }}>
-        Agent<span style={{ color: amber }}>(cy)</span>
+        Agent<span style={{ color: amber }} className="[font-family:'EB_Garamond',_Garamond,_Georgia,_serif] font-normal">(cy)</span>
       </div>
       <a href="/" style={{ position: "absolute", top: "32px", right: "32px", fontSize: "13px", color: grey, textDecoration: "none" }}>← Back</a>
 
@@ -139,67 +139,67 @@ export default function TalkPage() {
         {state === STATES.ERROR && "Something went wrong."}
       </h1>
 
-      {state === STATES.IDLE && (
-        <p style={{ fontSize: "16px", color: grey, maxWidth: "460px", textAlign: "center", lineHeight: 1.75, margin: "0 0 48px", fontFamily: "-apple-system, sans-serif" }}>
+      {state === STATES.IDLE &&
+      <p style={{ fontSize: "16px", color: grey, maxWidth: "460px", textAlign: "center", lineHeight: 1.75, margin: "0 0 48px", fontFamily: "-apple-system, sans-serif" }}>
           We find engineers from their real work — commits, models, contributions. Whether we reached out or you found us, you're in the right place. No CVs. Just what you've actually built.
         </p>
-      )}
-      {state === STATES.LIVE && (
-        <p style={{ fontSize: "14px", color: grey, margin: "0 0 48px", fontFamily: "-apple-system, sans-serif" }}>
+      }
+      {state === STATES.LIVE &&
+      <p style={{ fontSize: "14px", color: grey, margin: "0 0 48px", fontFamily: "-apple-system, sans-serif" }}>
           You'll speak with an AI assistant. A human recruiter reviews every profile.
         </p>
-      )}
-      {state === STATES.ENDED && (
-        <p style={{ fontSize: "15px", color: grey, maxWidth: "400px", textAlign: "center", margin: "0 0 48px", lineHeight: 1.7, fontFamily: "-apple-system, sans-serif" }}>
+      }
+      {state === STATES.ENDED &&
+      <p style={{ fontSize: "15px", color: grey, maxWidth: "400px", textAlign: "center", margin: "0 0 48px", lineHeight: 1.7, fontFamily: "-apple-system, sans-serif" }}>
           A recruiter on our team will review your profile within 48 hours.
         </p>
-      )}
-      {state === STATES.ERROR && (
-        <>
+      }
+      {state === STATES.ERROR &&
+      <>
           <p style={{ fontSize: "14px", color: "#b87171", margin: "0 0 10px", textAlign: "center", fontFamily: "-apple-system, sans-serif" }}>
             The call couldn't connect. Please try again or email hello@agentcy.io
           </p>
-          {errorMessage && (
-            <p style={{ fontSize: "11px", color: "#6b4040", margin: "0 0 36px", textAlign: "center", fontFamily: "monospace", maxWidth: "480px", wordBreak: "break-all" }}>
+          {errorMessage &&
+        <p style={{ fontSize: "11px", color: "#6b4040", margin: "0 0 36px", textAlign: "center", fontFamily: "monospace", maxWidth: "480px", wordBreak: "break-all" }}>
               {errorMessage}
             </p>
-          )}
+        }
         </>
-      )}
+      }
       {state === STATES.CONNECTING && <div style={{ marginBottom: "48px" }} />}
 
-      {(state === STATES.IDLE || state === STATES.ERROR) && (
-        <button onClick={handleStart} disabled={!vapiReady}
-          style={{ background: "transparent", color: "#f0ebe3", border: `1px solid ${vapiReady ? "#f0ebe3" : dark}`, borderRadius: "100px", padding: "15px 40px", fontSize: "15px", cursor: vapiReady ? "pointer" : "not-allowed", opacity: vapiReady ? 1 : 0.4, fontFamily: "-apple-system, sans-serif", transition: "border-color 0.2s, color 0.2s" }}
-          onMouseEnter={e => { if(vapiReady){ e.currentTarget.style.borderColor = amber; e.currentTarget.style.color = amber; }}}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "#f0ebe3"; e.currentTarget.style.color = "#f0ebe3"; }}>
+      {(state === STATES.IDLE || state === STATES.ERROR) &&
+      <button onClick={handleStart} disabled={!vapiReady}
+      style={{ background: "transparent", color: "#f0ebe3", border: `1px solid ${vapiReady ? "#f0ebe3" : dark}`, borderRadius: "100px", padding: "15px 40px", fontSize: "15px", cursor: vapiReady ? "pointer" : "not-allowed", opacity: vapiReady ? 1 : 0.4, fontFamily: "-apple-system, sans-serif", transition: "border-color 0.2s, color 0.2s" }}
+      onMouseEnter={(e) => {if (vapiReady) {e.currentTarget.style.borderColor = amber;e.currentTarget.style.color = amber;}}}
+      onMouseLeave={(e) => {e.currentTarget.style.borderColor = "#f0ebe3";e.currentTarget.style.color = "#f0ebe3";}}>
           Start conversation →
         </button>
-      )}
-      {state === STATES.CONNECTING && (
-        <button disabled style={{ background: "transparent", color: dark, border: `1px solid ${dark}`, borderRadius: "100px", padding: "15px 40px", fontSize: "15px", fontFamily: "-apple-system, sans-serif", cursor: "not-allowed" }}>
+      }
+      {state === STATES.CONNECTING &&
+      <button disabled style={{ background: "transparent", color: dark, border: `1px solid ${dark}`, borderRadius: "100px", padding: "15px 40px", fontSize: "15px", fontFamily: "-apple-system, sans-serif", cursor: "not-allowed" }}>
           Connecting...
         </button>
-      )}
-      {state === STATES.LIVE && (
-        <button onClick={handleEnd}
-          style={{ background: "transparent", color: grey, border: `1px solid ${dark}`, borderRadius: "100px", padding: "13px 36px", fontSize: "14px", fontFamily: "-apple-system, sans-serif", cursor: "pointer" }}
-          onMouseEnter={e => e.currentTarget.style.borderColor = "#6b6158"}
-          onMouseLeave={e => e.currentTarget.style.borderColor = dark}>
+      }
+      {state === STATES.LIVE &&
+      <button onClick={handleEnd}
+      style={{ background: "transparent", color: grey, border: `1px solid ${dark}`, borderRadius: "100px", padding: "13px 36px", fontSize: "14px", fontFamily: "-apple-system, sans-serif", cursor: "pointer" }}
+      onMouseEnter={(e) => e.currentTarget.style.borderColor = "#6b6158"}
+      onMouseLeave={(e) => e.currentTarget.style.borderColor = dark}>
           End conversation
         </button>
-      )}
-      {state === STATES.ENDED && (
-        <button onClick={handleRestart}
-          style={{ background: "transparent", color: grey, border: `1px solid ${dark}`, borderRadius: "100px", padding: "13px 36px", fontSize: "14px", fontFamily: "-apple-system, sans-serif", cursor: "pointer" }}>
+      }
+      {state === STATES.ENDED &&
+      <button onClick={handleRestart}
+      style={{ background: "transparent", color: grey, border: `1px solid ${dark}`, borderRadius: "100px", padding: "13px 36px", fontSize: "14px", fontFamily: "-apple-system, sans-serif", cursor: "pointer" }}>
           Start again
         </button>
-      )}
+      }
 
       <div style={{ position: "absolute", bottom: "24px", fontSize: "12px", color: dark, display: "flex", gap: "20px", flexWrap: "wrap", justifyContent: "center", fontFamily: "-apple-system, sans-serif" }}>
         <span>Processed under GDPR · 90 day retention</span>
         <a href="mailto:privacy@agentcy.io" style={{ color: dark, textDecoration: "none" }}>Remove my data</a>
       </div>
-    </div>
-  );
+    </div>);
+
 }
