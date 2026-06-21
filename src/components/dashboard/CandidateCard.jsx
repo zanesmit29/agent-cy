@@ -1,5 +1,5 @@
 export default function CandidateCard({ candidate, onClick }) {
-  const source = candidate.discovered_via || "Unknown";
+  const source = (candidate.discovered_via || "Unknown") === "self-registered" ? "Self-Registered" : (candidate.discovered_via || "Unknown");
   const channel = candidate.outreach_channel ?? "";
   const stage = candidate.current_stage ?? "";
   const isBeyondDiscovered = stage !== "Discovered";

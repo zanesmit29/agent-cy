@@ -5,7 +5,7 @@ export default function PendingReviewCard({ candidate, onUpdate, onClick }) {
   const [saving, setSaving] = useState(null);
 
   const channel = candidate.outreach_channel ?? "";
-  const source = candidate.discovered_via ?? "Unknown";
+  const source = (candidate.discovered_via ?? "Unknown") === "self-registered" ? "Self-Registered" : (candidate.discovered_via ?? "Unknown");
   const contactInfo = candidate.contact_path || candidate.email || "";
 
   const handleApprove = async (e) => {

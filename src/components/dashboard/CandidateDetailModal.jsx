@@ -35,7 +35,7 @@ function EvidenceCard({ evidenceCard }) {
 }
 
 export default function CandidateDetailModal({ candidate, onClose, onSave }) {
-  const source = candidate?.discovered_via || "Unknown";
+  const source = (candidate?.discovered_via || "Unknown") === "self-registered" ? "Self-Registered" : (candidate?.discovered_via || "Unknown");
   const channel = candidate?.outreach_channel ?? "";
 
   const gdprSeparator = "\n\n---\n";
@@ -115,10 +115,10 @@ export default function CandidateDetailModal({ candidate, onClose, onSave }) {
           </div>
 
           {/* Contact */}
-          {candidate.contact_path && (
+          {(candidate.contact_path || candidate.email) && (
             <div>
               <p className="font-sans text-xs text-white/40 mb-1 uppercase tracking-wider">Contact</p>
-              <p className="font-sans text-sm text-white/80">{candidate.contact_path}</p>
+              <p className="font-sans text-sm text-white/80">{candidate.contact_path || candidate.email}</p>
             </div>
           )}
 
@@ -128,6 +128,16 @@ export default function CandidateDetailModal({ candidate, onClose, onSave }) {
               <p className="font-sans text-xs text-white/40 mb-2 uppercase tracking-wider">Evidence</p>
               <div className="bg-white/5 rounded-sm border border-white/10 p-4">
                 <EvidenceCard evidenceCard={candidate.evidence_card} />
+              </div>
+            </div>
+          )}
+
+          {/* Vapi Transcript */}
+          {candidate.vapi_transcript && (
+            <div>
+              <p className="font-sans text-xs text-white/40 mb-2 uppercase tracking-wider">Vapi Transcript</p>
+              <div className="bg-white/5 rounded-sm border border-white/10 p-4 max-h-60 overflow-y-auto">
+                <p className="font-sans text-xs text-white/70 whitespace-pre-wrap leading-relaxed">{candidate.vapi_transcript}</p>
               </div>
             </div>
           )}
