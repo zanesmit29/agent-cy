@@ -23,27 +23,27 @@ export default function Home() {
 
         <div
           className="flex items-center gap-3 whitespace-nowrap self-end sm:self-auto"
-          style={{ background: "rgba(255, 255, 255, 0.08)", borderRadius: "8px", padding: "7px 14px" }}
+          style={{ background: "rgba(237, 233, 224, 0.12)", borderRadius: "8px", padding: "10px 20px", border: "1px solid rgba(237, 233, 224, 0.25)" }}
         >
-          <span className="font-sans text-xs text-[#888] tracking-[0.3px] font-light">
+          <span className="font-sans text-[13px] text-[#ede9e0] opacity-60 tracking-[0.3px] font-light">
             powered by
           </span>
           <img
             src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/1ee3e2911_base44_logo_clean.svg"
             alt="Base44"
-            className="h-5 w-auto"
+            className="h-[26px] w-auto"
           />
           <span className="text-[#666] text-sm">·</span>
           <img
             src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/57b018885_vapi_logo.svg"
             alt="Vapi"
-            className="h-5 w-auto"
+            className="h-[26px] w-auto"
           />
           <span className="text-[#666] text-sm">·</span>
           <img
             src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/cfaaaa044_pixverse_logo.svg"
             alt="PixVerse"
-            className="h-5 w-auto"
+            className="h-[26px] w-auto"
           />
         </div>
       </header>
