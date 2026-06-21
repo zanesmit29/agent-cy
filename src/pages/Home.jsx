@@ -15,11 +15,34 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0a0d10] flex flex-col text-[#f5f0e8]">
       {/* Nav */}
-      <header className="px-6 md:px-10 py-6 flex items-center border-b border-white/[0.07]">
+      <header className="px-6 md:px-10 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/[0.07] gap-3 sm:gap-0">
         <span className="font-heading text-xl tracking-tight">
           <span className="text-[#f5f0e8]">Agent</span>
           <span className="text-[#dba12c]">(cy)</span>
         </span>
+
+        <div className="flex items-center gap-2.5 whitespace-nowrap self-end sm:self-auto">
+          <span className="font-sans text-[11px] sm:text-[11px] max-[640px]:text-[10px] text-white/20 tracking-[0.3px] font-light">
+            powered by
+          </span>
+          <img
+            src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/1ee3e2911_base44_logo_clean.svg"
+            alt="Base44"
+            className="h-4 sm:h-4 max-[640px]:h-[13px] w-auto opacity-50"
+          />
+          <span className="text-white/15 text-xs">·</span>
+          <img
+            src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/57b018885_vapi_logo.svg"
+            alt="Vapi"
+            className="h-4 sm:h-4 max-[640px]:h-[13px] w-auto opacity-50"
+          />
+          <span className="text-white/15 text-xs">·</span>
+          <img
+            src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/cfaaaa044_pixverse_logo.svg"
+            alt="PixVerse"
+            className="h-4 sm:h-4 max-[640px]:h-[13px] w-auto opacity-50"
+          />
+        </div>
       </header>
 
       {/* Hero */}
