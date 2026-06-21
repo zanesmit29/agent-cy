@@ -253,7 +253,7 @@ export default function TalkPage() {
       {/* Footer */}
       <footer className="absolute bottom-6 flex gap-5 flex-wrap justify-center font-sans text-xs text-white/20">
         <span>Processed under GDPR · 90 day retention</span>
-        <a href="mailto:privacy@agentcy.io" className="hover:text-white/40 transition-colors">
+        <a href="mailto:privacy@agentcy.io" className="underline hover:text-white/40 transition-colors">
           Remove my data
         </a>
       </footer>
