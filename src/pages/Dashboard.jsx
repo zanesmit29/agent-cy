@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import KanbanColumn from "@/components/dashboard/KanbanColumn";
 import CandidateDetailModal from "@/components/dashboard/CandidateDetailModal";
 import PendingReviewCard from "@/components/dashboard/PendingReviewCard";
+import IntakeDoneCard from "@/components/dashboard/IntakeDoneCard";
 
 const STAGES = [
   "Discovered",
@@ -145,6 +146,8 @@ export default function Dashboard() {
                 onCardClick={setSelected}
                 renderCard={stage === "Pending Review"
                   ? (c) => <PendingReviewCard key={c.id} candidate={c} onUpdate={fetchAll} onClick={() => setSelected(c)} />
+                  : stage === "Intake Done"
+                  ? (c) => <IntakeDoneCard key={c.id} candidate={c} onUpdate={fetchAll} onClick={() => setSelected(c)} />
                   : undefined
                 }
               />
