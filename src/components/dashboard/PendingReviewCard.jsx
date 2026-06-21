@@ -19,6 +19,11 @@ export default function PendingReviewCard({ candidate, onUpdate, onClick }) {
       outreach_approved_at: new Date().toISOString().split("T")[0],
       current_stage: "Outreach Approved",
     });
+    await base44.functions.invoke("sendCandidateEmail", {
+      candidate_id: candidate.id,
+      subject: "Opportunity from Agent(cy)",
+      body: candidate.outreach_message ?? "",
+    });
     setSaving(null);
     onUpdate?.();
   };
