@@ -9,9 +9,7 @@ export default function IntakeDoneCard({ candidate, onUpdate, onClick }) {
   const handleGenerate = async (e) => {
     e.stopPropagation();
     setSaving(true);
-    await base44.entities.Candidate.update(candidate.id, {
-      current_stage: "Match Packet Ready",
-    });
+    await base44.functions.invoke("generateMatchPacket", { candidate_id: candidate.id });
     setSaving(false);
     onUpdate?.();
   };

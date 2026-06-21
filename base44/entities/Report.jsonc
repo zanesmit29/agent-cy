@@ -9,6 +9,49 @@
     "application_id": {
       "type": "string",
       "description": "Reference to Application"
+    },
+    "intake_summary": {
+      "type": "string",
+      "description": "2-3 sentence summary of the intake conversation"
+    },
+    "role_fit_observations": {
+      "type": "string",
+      "description": "Factual observations from transcript and evidence"
+    },
+    "open_questions": {
+      "type": "string",
+      "description": "Questions the recruiter should ask in the interview"
+    },
+    "logistics_and_availability": {
+      "type": "string",
+      "description": "Availability, location, notice period info"
+    },
+    "recommended_next_step": {
+      "type": "string",
+      "enum": [
+        "Advance",
+        "Request more info",
+        "Pass"
+      ],
+      "description": "AI-suggested next step"
+    },
+    "reasoning": {
+      "type": "string",
+      "description": "One sentence explaining the recommendation"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date",
+      "description": "When the match packet was generated"
+    },
+    "recruiter_decision": {
+      "type": "string",
+      "enum": [
+        "Advanced",
+        "Requested more info",
+        "Rejected"
+      ],
+      "description": "Recruiter's final decision"
     }
   },
   "required": []

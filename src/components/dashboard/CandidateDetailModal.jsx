@@ -46,10 +46,21 @@ export default function CandidateDetailModal({ candidate, onClose, onSave }) {
 
   const [draftText, setDraftText] = useState("");
   const [saving, setSaving] = useState(false);
+  const [report, setReport] = useState(null);
 
   useEffect(() => {
     setDraftText(initialDraft);
   }, [candidate?.id]);
+
+  useEffect(() => {
+    if (candidate?.current_stage === "Match Packet Ready" && candidate?.id) {
+      base44.entities.Report.filter({ candidate_id: candidate.id }, "-created_date", 1)
+        .then((reports) => { if (reports.length > 0) setReport(reports[0]); })
+        .catch(() => {});
+    } else {
+      setReport(null);
+    }
+  }, [candidate?.id, candidate?.current_stage]);
 
   if (!candidate) return null;
 
@@ -138,6 +149,58 @@ export default function CandidateDetailModal({ candidate, onClose, onSave }) {
               <p className="font-sans text-xs text-white/40 mb-2 uppercase tracking-wider">Vapi Transcript</p>
               <div className="bg-white/5 rounded-sm border border-white/10 p-4 max-h-60 overflow-y-auto">
                 <p className="font-sans text-xs text-white/70 whitespace-pre-wrap leading-relaxed">{candidate.vapi_transcript}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Match Packet */}
+          {report && (
+            <div>
+              <p className="font-sans text-xs text-white/40 mb-2 uppercase tracking-wider">Match Packet</p>
+              <div className="bg-white/5 rounded-sm border border-white/10 p-4 space-y-4">
+                {report.intake_summary && (
+                  <div>
+                    <p className="font-sans text-xs text-white/40 mb-1 uppercase tracking-wider">Intake Summary</p>
+                    <p className="font-sans text-xs text-white/80 leading-relaxed">{report.intake_summary}</p>
+                  </div>
+                )}
+                {report.role_fit_observations && (
+                  <div>
+                    <p className="font-sans text-xs text-white/40 mb-1 uppercase tracking-wider">Role Fit Observations</p>
+                    <p className="font-sans text-xs text-white/80 leading-relaxed whitespace-pre-wrap">{report.role_fit_observations}</p>
+                  </div>
+                )}
+                {report.open_questions && (
+                  <div>
+                    <p className="font-sans text-xs text-white/40 mb-1 uppercase tracking-wider">Open Questions</p>
+                    <p className="font-sans text-xs text-white/80 leading-relaxed whitespace-pre-wrap">{report.open_questions}</p>
+                  </div>
+                )}
+                {report.logistics_and_availability && (
+                  <div>
+                    <p className="font-sans text-xs text-white/40 mb-1 uppercase tracking-wider">Logistics & Availability</p>
+                    <p className="font-sans text-xs text-white/80 leading-relaxed">{report.logistics_and_availability}</p>
+                  </div>
+                )}
+                {report.recommended_next_step && (
+                  <div>
+                    <p className="font-sans text-xs text-white/40 mb-1 uppercase tracking-wider">Recommended Next Step</p>
+                    <div className="flex items-center gap-2">
+                      <span className={`font-sans text-xs px-2 py-0.5 rounded-sm ${
+                        report.recommended_next_step === "Advance" ? "bg-emerald-500/10 text-emerald-400" :
+                        report.recommended_next_step === "Request more info" ? "bg-amber-500/10 text-amber-400" :
+                        "bg-red-500/10 text-red-400"
+                      }`}>{report.recommended_next_step}</span>
+                      <span className="font-sans text-xs text-white/25">— AI suggestion only · recruiter decides</span>
+                    </div>
+                  </div>
+                )}
+                {report.reasoning && (
+                  <div>
+                    <p className="font-sans text-xs text-white/40 mb-1 uppercase tracking-wider">Reasoning</p>
+                    <p className="font-sans text-xs text-white/70 leading-relaxed">{report.reasoning}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}
