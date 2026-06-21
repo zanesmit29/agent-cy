@@ -21,26 +21,29 @@ export default function Home() {
           <span className="text-[#dba12c]">(cy)</span>
         </span>
 
-        <div className="flex items-center gap-2.5 whitespace-nowrap self-end sm:self-auto">
-          <span className="font-sans text-[11px] sm:text-[11px] max-[640px]:text-[10px] text-white/20 tracking-[0.3px] font-light">
+        <div className="flex items-center gap-3.5 whitespace-nowrap self-end sm:self-auto max-[640px]:gap-2.5">
+          <span className="font-sans text-[13px] max-[640px]:text-[11px] text-[#737373] opacity-80 tracking-[0.3px] font-light">
             powered by
           </span>
           <img
             src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/1ee3e2911_base44_logo_clean.svg"
             alt="Base44"
-            className="h-4 sm:h-4 max-[640px]:h-[13px] w-auto opacity-50"
+            className="h-6 max-[640px]:h-[18px] w-auto opacity-70"
+            style={{ filter: "brightness(0) invert(1)" }}
           />
-          <span className="text-white/15 text-xs">·</span>
+          <span className="text-[#666] text-sm max-[640px]:text-xs">·</span>
           <img
             src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/57b018885_vapi_logo.svg"
             alt="Vapi"
-            className="h-4 sm:h-4 max-[640px]:h-[13px] w-auto opacity-50"
+            className="h-6 max-[640px]:h-[18px] w-auto opacity-70"
+            style={{ filter: "brightness(0) invert(1)" }}
           />
-          <span className="text-white/15 text-xs">·</span>
+          <span className="text-[#666] text-sm max-[640px]:text-xs">·</span>
           <img
             src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/cfaaaa044_pixverse_logo.svg"
             alt="PixVerse"
-            className="h-4 sm:h-4 max-[640px]:h-[13px] w-auto opacity-50"
+            className="h-6 max-[640px]:h-[18px] w-auto opacity-70"
+            style={{ filter: "brightness(0) invert(1)" }}
           />
         </div>
       </header>
