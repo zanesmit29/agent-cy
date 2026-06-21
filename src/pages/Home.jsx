@@ -16,7 +16,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#0a0d10] flex flex-col text-[#f5f0e8]">
       {/* Nav */}
       <header className="px-6 md:px-10 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/[0.07] gap-3 sm:gap-0">
-        <span className="font-heading text-xl tracking-tight">
+        <span className="font-heading text-[32px] tracking-tight">
           <span className="text-[#f5f0e8]">Agent</span>
           <span className="text-[#dba12c]">(cy)</span>
         </span>
