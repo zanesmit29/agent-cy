@@ -15,6 +15,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: "No recent Vapi call found" }, { status: 404 });
     }
 
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
     const detailRes = await fetch(`https://api.vapi.ai/call/${callId}`, {
       headers: { Authorization: `Bearer ${Deno.env.get("VAPI_PRIVATE_KEY")}` },
     });
