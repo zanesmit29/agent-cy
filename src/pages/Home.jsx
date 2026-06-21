@@ -23,27 +23,27 @@ export default function Home() {
 
         <div
           className="flex items-center gap-3 whitespace-nowrap self-end sm:self-auto"
-          style={{ background: "#ede9e0", borderRadius: "7px", padding: "9px 18px", border: "1px solid #ede9e0" }}
+          style={{ background: "#ede9e0", borderRadius: "7px", padding: "8px 16px", border: "1px solid #ede9e0" }}
         >
-          <span className="font-sans text-xs text-[#333] tracking-[0.3px] font-light">
+          <span className="font-sans text-[11px] text-[#333] tracking-[0.3px] font-light">
             powered by
           </span>
           <img
             src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/1ee3e2911_base44_logo_clean.svg"
             alt="Base44"
-            className="h-8 w-auto"
+            className="h-7 w-auto"
           />
           <span className="text-[#999] text-sm">·</span>
           <img
             src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/57b018885_vapi_logo.svg"
             alt="Vapi"
-            className="h-8 w-auto"
+            className="h-7 w-auto"
           />
           <span className="text-[#999] text-sm">·</span>
           <img
             src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/cfaaaa044_pixverse_logo.svg"
             alt="PixVerse"
-            className="h-8 w-auto"
+            className="h-7 w-auto"
           />
         </div>
       </header>
