@@ -25,6 +25,8 @@ export default function Dashboard() {
   const [selected, setSelected] = useState(null);
   const [generatingDrafts, setGeneratingDrafts] = useState(false);
   const [draftResult, setDraftResult] = useState(null);
+  const [discovering, setDiscovering] = useState(false);
+  const [discoverResult, setDiscoverResult] = useState(null);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -67,6 +69,38 @@ export default function Dashboard() {
     }
   }, [fetchAll]);
 
+  const handleDiscoverTalent = useCallback(async () => {
+    setDiscovering(true);
+    setDiscoverResult(null);
+    try {
+      const [ghRes, hfRes] = await Promise.allSettled([
+        base44.functions.invoke("searchGitHub", {}),
+        base44.functions.invoke("searchHuggingFace", {}),
+      ]);
+
+      const ghOk = ghRes.status === "fulfilled" ? ghRes.value.data : null;
+      const hfOk = hfRes.status === "fulfilled" ? hfRes.value.data : null;
+
+      const ghFound = ghOk?.new_candidates_found ?? 0;
+      const hfFound = hfOk?.new_candidates_found ?? 0;
+      const total = ghFound + hfFound;
+
+      const parts = [];
+      if (ghOk) parts.push(`${ghFound} from GitHub`);
+      else parts.push("GitHub search failed");
+      if (hfOk) parts.push(`${hfFound} from HuggingFace`);
+      else parts.push("HuggingFace search failed");
+
+      const type = total > 0 ? "success" : "warning";
+      setDiscoverResult({ type, message: `Talent discovery complete — ${parts.join(", ")}.` });
+      fetchAll();
+    } catch (err) {
+      setDiscoverResult({ type: "error", message: err?.response?.data?.error ?? err?.message ?? "Discovery failed." });
+    } finally {
+      setDiscovering(false);
+    }
+  }, [fetchAll]);
+
   const filtered = sourceFilter === "All"
     ? allCandidates
     : allCandidates.filter((c) => c.discovered_via === sourceFilter);
@@ -101,6 +135,22 @@ export default function Dashboard() {
             {loading ? "Loading…" : `${filtered.length} / ${allCandidates.length} candidates`}
           </span>
           <button
+            onClick={handleDiscoverTalent}
+            disabled={discovering}
+            className="flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-white font-sans text-xs font-semibold px-4 py-2.5 transition-all duration-150 hover:scale-[1.03] active:scale-[0.97]"
+            style={{
+              background: "linear-gradient(180deg, #60a5fa 0%, #2563eb 100%)",
+              borderRadius: "12px",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3)",
+            }}
+          >
+            {discovering ? (
+              <><span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Discovering…</>
+            ) : (
+              "Discover Talent"
+            )}
+          </button>
+          <button
             onClick={handleGenerateDrafts}
             disabled={generatingDrafts}
             className="flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-[#0a0e13] font-sans text-xs font-semibold px-4 py-2.5 transition-all duration-150 hover:scale-[1.03] active:scale-[0.97]"
@@ -128,6 +178,17 @@ export default function Dashboard() {
             : "bg-red-500/10 border-red-500/25 text-red-400"
         }`}>
           {draftResult.message}
+        </div>
+      )}
+      {discoverResult && (
+        <div className={`mx-8 mt-4 px-4 py-2.5 rounded-sm font-sans text-xs border ${
+          discoverResult.type === "success"
+            ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+            : discoverResult.type === "warning"
+            ? "bg-amber-500/10 border-amber-500/25 text-amber-400"
+            : "bg-red-500/10 border-red-500/25 text-red-400"
+        }`}>
+          {discoverResult.message}
         </div>
       )}
 
