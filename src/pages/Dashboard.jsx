@@ -4,6 +4,7 @@ import KanbanColumn from "@/components/dashboard/KanbanColumn";
 import CandidateDetailModal from "@/components/dashboard/CandidateDetailModal";
 import PendingReviewCard from "@/components/dashboard/PendingReviewCard";
 import IntakeDoneCard from "@/components/dashboard/IntakeDoneCard";
+import MatchPacketReadyCard from "@/components/dashboard/MatchPacketReadyCard";
 
 const STAGES = [
   "Discovered",
@@ -148,6 +149,8 @@ export default function Dashboard() {
                   ? (c) => <PendingReviewCard key={c.id} candidate={c} onUpdate={fetchAll} onClick={() => setSelected(c)} />
                   : stage === "Intake Done"
                   ? (c) => <IntakeDoneCard key={c.id} candidate={c} onUpdate={fetchAll} onClick={() => setSelected(c)} />
+                  : stage === "Match Packet Ready"
+                  ? (c) => <MatchPacketReadyCard key={c.id} candidate={c} onUpdate={fetchAll} onClick={() => setSelected(c)} />
                   : undefined
                 }
               />
