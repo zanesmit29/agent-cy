@@ -12,6 +12,8 @@ export default function TalkPage() {
   const [vapiReady, setVapiReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const vapiRef = useRef(null);
+  const candidateIdRef = useRef(null);
+  const candidateReadyRef = useRef(false);
   const apiKeyRef = useRef(null);
   const orbRef = useRef(null);
   const ring1Ref = useRef(null);
@@ -24,6 +26,33 @@ export default function TalkPage() {
     base44.functions.invoke("getVapiPublicKey", {})
       .then((res) => { apiKeyRef.current = res.data.publicKey; setVapiReady(true); })
       .catch(() => { setErrorMessage("Failed to load Vapi configuration"); setState(STATES.ERROR); });
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const user = await base44.auth.me();
+        if (!user) return;
+        const email = user.email;
+        const fullName = user.full_name || "";
+
+        const existing = await base44.entities.Candidate.filter({ email }, null, 1);
+        if (existing.length > 0) {
+          candidateIdRef.current = existing[0].id;
+        } else {
+          const created = await base44.entities.Candidate.create({
+            name: fullName || email,
+            email,
+            current_stage: "Discovered",
+            discovered_via: "self-registered",
+          });
+          candidateIdRef.current = created.id;
+        }
+        candidateReadyRef.current = true;
+      } catch (e) {
+        console.warn("Candidate lookup failed:", e);
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -95,7 +124,17 @@ export default function TalkPage() {
     vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
-    vapi.on("call-end", () => { setState(STATES.ENDED); cleanup(); setTimeout(() => { window.location.href = "/candidate-dashboard"; }, 2500); });
+    vapi.on("call-end", async (payload) => {
+      setState(STATES.ENDED);
+      cleanup();
+      const callId = payload?.id || payload?.call?.id;
+      const cid = candidateIdRef.current;
+      if (callId && cid) {
+        await base44.entities.Candidate.update(cid, { vapi_call_id: callId });
+        base44.functions.invoke("fetchVapiTranscript", { call_id: callId, candidate_id: cid }).catch(() => {});
+      }
+      setTimeout(() => { window.location.href = "/candidate-dashboard"; }, 2500);
+    });
     vapi.on("error", (e) => {
       console.error("Vapi error:", e);
       setErrorMessage(e?.message || e?.error?.message || JSON.stringify(e) || "Unknown error");

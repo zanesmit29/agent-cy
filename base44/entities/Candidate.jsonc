@@ -46,7 +46,8 @@
         "GitHub",
         "HuggingFace",
         "Discord",
-        "LinkedIn"
+        "LinkedIn",
+        "self-registered"
       ],
       "description": "Source channel where candidate was discovered"
     },
@@ -107,6 +108,14 @@
       "type": "string",
       "format": "date",
       "description": "GDPR Art. 5(1)(e) \u2014 auto-set to today +90 days at creation, today +30 days on opt-out"
+    },
+    "vapi_call_id": {
+      "type": "string",
+      "description": "ID of the Vapi call for this candidate"
+    },
+    "vapi_transcript": {
+      "type": "string",
+      "description": "Full transcript of the Vapi call"
     }
   },
   "required": [
