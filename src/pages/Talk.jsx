@@ -124,14 +124,12 @@ export default function TalkPage() {
     vapi.on("call-start", async () => { setState(STATES.LIVE); await startMicAnalyser(); });
     vapi.on("speech-start", () => setAgentSpeaking(true));
     vapi.on("speech-end", () => setAgentSpeaking(false));
-    vapi.on("call-end", async (payload) => {
+    vapi.on("call-end", async () => {
       setState(STATES.ENDED);
       cleanup();
-      const callId = payload?.id || payload?.call?.id;
       const cid = candidateIdRef.current;
-      if (callId && cid) {
-        await base44.entities.Candidate.update(cid, { vapi_call_id: callId });
-        base44.functions.invoke("fetchVapiTranscript", { call_id: callId, candidate_id: cid }).catch(() => {});
+      if (cid) {
+        base44.functions.invoke("fetchVapiTranscript", { candidate_id: cid }).catch(() => {});
       }
       setTimeout(() => { window.location.href = "/candidate-dashboard"; }, 2500);
     });
