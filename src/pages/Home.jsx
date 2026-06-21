@@ -99,7 +99,9 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[0.06] rounded-sm overflow-hidden">
           {/* Left: We find you */}
           <div className="bg-[#0a0d10] px-8 md:px-10 py-10 md:py-12 flex flex-col items-center text-center">
-            <Search className="w-6 h-6 text-[#dba12c]/50 mb-6" strokeWidth={1.5} />
+            <div style={{ background: "#ede9e0", borderRadius: "50%", width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Search className="w-6 h-6 text-[#1a1a1a]" strokeWidth={1.5} />
+            </div>
             <h3 className="font-heading text-2xl text-[#f5f0e8] font-medium mb-3">
               We find you
             </h3>
@@ -111,7 +113,9 @@ export default function Home() {
 
           {/* Right: You find us */}
           <div className="bg-[#0a0d10] px-8 md:px-10 py-10 md:py-12 flex flex-col items-center text-center">
-            <User className="w-6 h-6 text-[#dba12c]/50 mb-6" strokeWidth={1.5} />
+            <div style={{ background: "#ede9e0", borderRadius: "50%", width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <User className="w-6 h-6 text-[#1a1a1a]" strokeWidth={1.5} />
+            </div>
             <h3 className="font-heading text-2xl text-[#f5f0e8] font-medium mb-3">
               You find us
             </h3>
@@ -128,7 +132,9 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[0.06] rounded-sm overflow-hidden">
           {/* Left: Recruiter */}
           <div className="bg-[#0a0d10] px-8 py-10 flex flex-col items-center text-center">
-            <Shield className="w-6 h-6 text-[#dba12c]/40 mb-5" strokeWidth={1.5} />
+            <div style={{ background: "#ede9e0", borderRadius: "50%", width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Shield className="w-6 h-6 text-[#1a1a1a]" strokeWidth={1.5} />
+            </div>
             <h3 className="font-heading text-xl text-[#f5f0e8] font-medium mb-1">
               For our Agent(cy) team
             </h3>
@@ -147,7 +153,9 @@ export default function Home() {
 
           {/* Right: Candidate */}
           <div className="bg-[#0a0d10] px-8 py-10 flex flex-col items-center text-center">
-            <Users className="w-6 h-6 text-[#dba12c]/40 mb-5" strokeWidth={1.5} />
+            <div style={{ background: "#ede9e0", borderRadius: "50%", width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Users className="w-6 h-6 text-[#1a1a1a]" strokeWidth={1.5} />
+            </div>
             <h3 className="font-heading text-xl text-[#f5f0e8] font-medium mb-1">
               For candidates
             </h3>
