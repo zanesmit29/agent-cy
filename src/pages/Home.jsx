@@ -1,6 +1,7 @@
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import GoogleIcon from "@/components/GoogleIcon";
+import { Search, User, Shield, Users } from "lucide-react";
 
 export default function Home() {
   const handleRecruiterLogin = () => {
@@ -12,93 +13,149 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0e13] flex flex-col text-white">
+    <div className="min-h-screen bg-[#0a0d10] flex flex-col text-[#f5f0e8]">
       {/* Nav */}
-      <header className="px-8 py-6 flex items-center justify-between border-b border-white/10">
-        <span className="font-heading text-xl tracking-tight"><span className="text-white [font-family:'EB_Garamond',_Garamond,_Georgia,_serif] font-normal">Agent</span><span className="text-[#dba12c] [font-family:'EB_Garamond',_Garamond,_Georgia,_serif] font-normal">(cy)</span></span>
-        
-
-
-
-
-        
+      <header className="px-6 md:px-10 py-6 flex items-center border-b border-white/[0.07]">
+        <span className="font-heading text-xl tracking-tight">
+          <span className="text-[#f5f0e8]">Agent</span>
+          <span className="text-[#dba12c]">(cy)</span>
+        </span>
       </header>
 
       {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 my-1">
-        
-
-        
-
-        <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl leading-[1.05] font-medium max-w-3xl mb-12 mt-12 normal-case">We connect engineers to the right roles. Our AI does the groundwork.
-
-
+      <section className="flex flex-col items-center text-center px-6 pt-24 md:pt-32 pb-16 md:pb-20">
+        <h1 className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[1.08] font-medium max-w-4xl tracking-tight">
+          The first AI‑native recruitment agency in Europe.
         </h1>
 
-        <div className="w-full max-w-[800px] mb-10 mx-auto" style={{ borderRadius: "8px", overflow: "hidden" }}>
+        <p className="font-sans text-base sm:text-lg text-white/50 max-w-2xl mt-8 leading-relaxed font-light">
+          Agent(cy) helps companies find better candidates faster, and helps candidates showcase their
+          work — whether we discover them through GitHub and Hugging Face or they discover Agent(cy)
+          and use it as their showcase.
+        </p>
+
+        <p className="font-heading text-base sm:text-lg text-[#dba12c]/60 mt-6">
+          Built from day one for the EU AI Act.
+        </p>
+      </section>
+
+      {/* Video */}
+      <section className="px-6 md:px-10 pb-20 md:pb-24 max-w-4xl mx-auto w-full">
+        <div className="mb-5 text-center">
+          <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-white/25 mb-2">
+            Watch the video
+          </p>
+        </div>
+        <div
+          className="overflow-hidden border border-white/[0.08]"
+          style={{ borderRadius: "12px" }}
+        >
           <video
             width="100%"
             style={{ aspectRatio: "16/9", display: "block" }}
             controls
-            playsInline>
-            
-            <source src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/5a3eeabd7_agentcy_intro.mp4" type="video/mp4" />
+            playsInline
+          >
+            <source
+              src="https://base44.app/api/apps/6a343189bec08d927de377d0/files/mp/public/6a343189bec08d927de377d0/5a3eeabd7_agentcy_intro.mp4"
+              type="video/mp4"
+            />
           </video>
-          
         </div>
+        <p className="font-sans text-sm text-white/30 text-center mt-5 max-w-xl mx-auto leading-relaxed font-light">
+          See how Agent(cy) works when candidates are discovered through GitHub and Hugging Face
+          or come to us directly to showcase their work.
+        </p>
+      </section>
 
-        
+      {/* Two-way explanation */}
+      <section className="px-6 md:px-10 pb-20 md:pb-24 max-w-4xl mx-auto w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[0.06] rounded-sm overflow-hidden">
+          {/* Left: We find you */}
+          <div className="bg-[#0a0d10] px-8 md:px-10 py-10 md:py-12 flex flex-col items-center text-center">
+            <Search className="w-6 h-6 text-[#dba12c]/50 mb-6" strokeWidth={1.5} />
+            <h3 className="font-heading text-2xl text-[#f5f0e8] font-medium mb-3">
+              We find you
+            </h3>
+            <p className="font-sans text-sm text-white/40 leading-relaxed font-light max-w-xs">
+              Agent(cy) searches GitHub and Hugging Face for public work evidence and surfaces
+              strong candidates to our team.
+            </p>
+          </div>
 
-        
+          {/* Right: You find us */}
+          <div className="bg-[#0a0d10] px-8 md:px-10 py-10 md:py-12 flex flex-col items-center text-center">
+            <User className="w-6 h-6 text-[#dba12c]/50 mb-6" strokeWidth={1.5} />
+            <h3 className="font-heading text-2xl text-[#f5f0e8] font-medium mb-3">
+              You find us
+            </h3>
+            <p className="font-sans text-sm text-white/40 leading-relaxed font-light max-w-xs">
+              Candidates can discover Agent(cy) themselves and use it as a showcase to present
+              their work through a guided voice experience.
+            </p>
+          </div>
+        </div>
+      </section>
 
-        {/* Login Section */}
-        <div className="w-full max-w-xl mx-auto flex items-stretch gap-0 border border-white/10 rounded-sm overflow-hidden mb-6">
-          {/* Recruiter Login */}
-          <div className="flex-1 flex flex-col items-center px-6 py-8">
-            <p className="font-sans text-xs text-white/40 uppercase tracking-wider mb-4">Recruiter Login</p>
+      {/* Login cards */}
+      <section className="px-6 md:px-10 pb-20 md:pb-24 max-w-2xl mx-auto w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[0.06] rounded-sm overflow-hidden">
+          {/* Left: Recruiter */}
+          <div className="bg-[#0a0d10] px-8 py-10 flex flex-col items-center text-center">
+            <Shield className="w-6 h-6 text-[#dba12c]/40 mb-5" strokeWidth={1.5} />
+            <h3 className="font-heading text-xl text-[#f5f0e8] font-medium mb-1">
+              For our Agent(cy) team
+            </h3>
+            <p className="font-sans text-xs text-white/35 mb-6 font-light">
+              Internal recruiter login for the people running Agent(cy)
+            </p>
             <Button
               variant="outline"
-              className="w-full h-12 text-sm font-sans font-medium bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white rounded-sm"
-              onClick={handleRecruiterLogin}>
-              
-              <GoogleIcon className="w-5 h-5 mr-2" />
+              className="w-full h-11 text-sm font-sans font-normal bg-transparent border-white/[0.12] text-[#f5f0e8]/70 hover:bg-white/[0.04] hover:text-[#f5f0e8] rounded-sm"
+              onClick={handleRecruiterLogin}
+            >
+              <GoogleIcon className="w-4 h-4 mr-2" />
               Continue with Google
             </Button>
           </div>
 
-          {/* Divider */}
-          <div className="w-px bg-white/10 flex-shrink-0" />
-
-          {/* Candidate Login */}
-          <div className="flex-1 flex flex-col items-center px-6 py-8">
-            <p className="font-sans text-xs text-white/40 uppercase tracking-wider mb-4">Candidate Login</p>
+          {/* Right: Candidate */}
+          <div className="bg-[#0a0d10] px-8 py-10 flex flex-col items-center text-center">
+            <Users className="w-6 h-6 text-[#dba12c]/40 mb-5" strokeWidth={1.5} />
+            <h3 className="font-heading text-xl text-[#f5f0e8] font-medium mb-1">
+              For candidates
+            </h3>
+            <p className="font-sans text-xs text-white/35 mb-6 font-light">
+              Log in to showcase your work or continue your voice conversation
+            </p>
             <Button
               variant="outline"
-              className="w-full h-12 text-sm font-sans font-medium bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white rounded-sm"
-              onClick={handleCandidateLogin}>
-              
-              <GoogleIcon className="w-5 h-5 mr-2" />
+              className="w-full h-11 text-sm font-sans font-normal bg-transparent border-white/[0.12] text-[#f5f0e8]/70 hover:bg-white/[0.04] hover:text-[#f5f0e8] rounded-sm"
+              onClick={handleCandidateLogin}
+            >
+              <GoogleIcon className="w-4 h-4 mr-2" />
               Continue with Google
             </Button>
           </div>
         </div>
-      </main>
+      </section>
 
-      {/* Footer — GDPR Art. 13/14 */}
-      <footer className="px-8 py-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 my-6">
-        <p className="font-sans text-xs text-white/35 text-center sm:text-left max-w-xl leading-relaxed">
-          Agent(cy) uses AI to discover candidates and prepare evidence. All hiring decisions are made by human recruiters. Data controller: Agent(cy) —{" "}
-          <a href="mailto:privacy@agentcy.io" className="underline hover:text-white/60 transition-colors">
+      {/* Footer */}
+      <footer className="px-6 md:px-10 py-8 border-t border-white/[0.07] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p className="font-sans text-xs text-white/25 text-center sm:text-left max-w-xl leading-relaxed font-light">
+          Agent(cy) uses AI to discover candidates and prepare evidence. All hiring decisions are
+          made by human recruiters. Data controller: Agent(cy) —{" "}
+          <a href="mailto:privacy@agentcy.io" className="underline hover:text-white/45 transition-colors">
             privacy@agentcy.io
           </a>
         </p>
         <a
           href="mailto:privacy@agentcy.io"
-          className="font-sans text-xs text-white/35 underline hover:text-white/60 transition-colors whitespace-nowrap">
-          
+          className="font-sans text-xs text-white/25 underline hover:text-white/45 transition-colors whitespace-nowrap"
+        >
           Remove my data
         </a>
       </footer>
-    </div>);
-
+    </div>
+  );
 }
