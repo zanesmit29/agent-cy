@@ -177,7 +177,7 @@ export default function TalkPage() {
 
       {/* Heading */}
       <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl leading-tight text-center mb-5 font-medium">
-        {state === STATES.IDLE && (<span>Tell us who you are.<br />And what you've built.</span>)}
+        {state === STATES.IDLE && (<span>Tell us who you are<br />and what you've built.</span>)}
         {state === STATES.CONNECTING && <em className="text-white/40">Connecting...</em>}
         {state === STATES.LIVE && (agentSpeaking ? "Agent speaking." : "Listening.")}
         {state === STATES.ENDED && "Conversation complete."}
