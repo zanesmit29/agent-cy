@@ -143,10 +143,23 @@ export default function Home() {
             </p>
             <Button
               variant="outline"
-              className="w-full h-11 text-sm font-sans font-normal bg-transparent border-white/[0.12] text-[#f5f0e8]/70 hover:bg-white/[0.04] hover:text-[#f5f0e8] rounded-sm"
+              className="w-full text-[#1a1a1a] font-sans font-semibold gap-[10px]"
+              style={{
+                background: "#ede9e0",
+                border: "1px solid rgba(0,0,0,0.1)",
+                borderRadius: "10px",
+                fontSize: "15px",
+                padding: "12px 24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "#e0dbd0"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "#ede9e0"}
               onClick={handleRecruiterLogin}
             >
-              <GoogleIcon className="w-4 h-4 mr-2" />
+              <GoogleIcon className="w-4 h-4" />
               Continue with Google
             </Button>
           </div>
@@ -164,10 +177,23 @@ export default function Home() {
             </p>
             <Button
               variant="outline"
-              className="w-full h-11 text-sm font-sans font-normal bg-transparent border-white/[0.12] text-[#f5f0e8]/70 hover:bg-white/[0.04] hover:text-[#f5f0e8] rounded-sm"
+              className="w-full text-[#1a1a1a] font-sans font-semibold gap-[10px]"
+              style={{
+                background: "#ede9e0",
+                border: "1px solid rgba(0,0,0,0.1)",
+                borderRadius: "10px",
+                fontSize: "15px",
+                padding: "12px 24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "#e0dbd0"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "#ede9e0"}
               onClick={handleCandidateLogin}
             >
-              <GoogleIcon className="w-4 h-4 mr-2" />
+              <GoogleIcon className="w-4 h-4" />
               Continue with Google
             </Button>
           </div>
