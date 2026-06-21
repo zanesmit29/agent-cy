@@ -24,8 +24,8 @@ export default function CandidateCard({ candidate, onClick }) {
           )}
         </div>
       </div>
-      {candidate.contact_path && (
-        <p className="font-sans text-xs text-white/35 mt-1 truncate">{candidate.contact_path}</p>
+      {candidate.email && (
+        <p className="font-sans text-xs text-white/35 mt-1 truncate">{candidate.email}</p>
       )}
     </div>
   );
