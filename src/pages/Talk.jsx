@@ -187,7 +187,7 @@ export default function TalkPage() {
       {/* Subtext */}
       {state === STATES.IDLE && (
         <p className="font-sans text-base text-white/50 max-w-md text-center leading-relaxed mb-12">
-          We find engineers from their real work — commits, models, contributions. Whether we reached out or you found us, you're in the right place. No CVs. Just what you've actually built.
+          Whether Agent(cy) found you through GitHub or Hugging Face, or you found us yourself, this is where you can talk through your work in a guided voice conversation. A human recruiter will review the result.
         </p>
       )}
       {state === STATES.LIVE && (
