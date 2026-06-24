@@ -4,10 +4,6 @@ import GoogleIcon from "@/components/GoogleIcon";
 import { Search, User, Shield, Users } from "lucide-react";
 
 export default function Home() {
-  const handleRecruiterLogin = () => {
-    base44.auth.loginWithProvider("google", "/dashboard");
-  };
-
   const handleCandidateLogin = () => {
     base44.auth.loginWithProvider("google", "/talk");
   };
@@ -138,30 +134,9 @@ export default function Home() {
             <h3 className="font-heading text-xl text-[#f5f0e8] font-medium mb-1">
               For our Agent(cy) team
             </h3>
-            <p className="font-sans text-xs text-white/35 mb-6 font-light">
+            <p className="font-sans text-xs text-white/35 font-light">
               Internal recruiter login for the people running Agent(cy)
             </p>
-            <Button
-              variant="outline"
-              className="w-full text-[#1a1a1a] font-sans font-semibold gap-[10px]"
-              style={{
-                background: "#ede9e0",
-                border: "1px solid rgba(0,0,0,0.1)",
-                borderRadius: "10px",
-                fontSize: "15px",
-                padding: "12px 24px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "#e0dbd0"}
-              onMouseLeave={(e) => e.currentTarget.style.background = "#ede9e0"}
-              onClick={handleRecruiterLogin}
-            >
-              <GoogleIcon className="w-4 h-4" />
-              Continue with Google
-            </Button>
           </div>
 
           {/* Right: Candidate */}
